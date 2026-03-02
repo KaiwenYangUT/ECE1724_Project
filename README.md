@@ -161,231 +161,105 @@ Regarding feasibility, our development will follow a phased approach in which we
 
 ## Team Responsibilities
 
-We will adopt a vertical ownership model with cross-review on critical logic, meaning each member is responsible for a core feature area while collaborating on security-sensitive and consistency-critical components.
+We adopt a vertical ownership model with shared review of security- and consistency-critical logic.
 
 Member A – Authentication & Security
 
-1. Implement user registration and login
+- Registration and login
 
-2. Manage session or token-based authentication
+- Session/token management
 
-3. Implement role-based access control (Organizer, Staff, Attendee)
+- Role-based access control (Organizer, Staff, Attendee)
 
-4. Protect Server Actions and APIs
+- Protect APIs and Server Actions
 
-5. Design and implement QR token signing and verification
+- QR token signing and verification
 
-6. Conduct security testing and edge-case handling
+- Security testing
 
 Member B – Event & Ticket Core Logic
 
-1. Implement event creation and management
+- Event management
 
-2. Implement TicketTier configuration and quota control
+- TicketTier and quota control
 
-3. Implement ticket issuance and database persistence
+- Ticket issuance and persistence
 
-4. Ensure transactional consistency for ticket generation
+- Transactional consistency
 
-5. Optimize database schema and relationships
+- Database schema optimization
 
-Member C – Check-in System & Real-Time Communication
+Member C – Check-in & Real-Time
 
-1. Implement mobile-friendly QR scanning interface
+- Mobile QR scanning interface
 
-2. Develop atomic check-in API to prevent duplicate usage
+- Atomic check-in API
 
-3. Implement SSE or WebSocket for real-time updates
+- SSE/WebSocket implementation
 
-4. Build real-time attendance dashboard
-
-5. Implement check-in log tracking and display
+- Real-time dashboard and logs
 
 Member D – File Processing, Analytics & Deployment
 
-1. Integrate cloud storage for event assets and reports
+- Cloud storage integration
 
-2. Implement CSV import/export with validation and error reporting
+- CSV import/export with validation
 
-3. Build attendance analytics dashboard (e.g., attendance rate, ticket usage distribution)
+- Attendance analytics
 
-4. Manage deployment and environment configuration
-
-5. Conduct performance optimization and system testing
+- Deployment and performance optimization
 
 ---
 
-## Weekly Plan
+## Development Plan (Milestone-Based)
 
-Week 1 – Architecture & Setup
+Core features will be completed within the first 16 days, followed by advanced features and refinement.
 
-- Finalize database ER design
+Milestone 1 (Days 1–5): Setup and database schema.
 
-- Initialize Next.js full-stack project with TypeScript
+Milestone 2 (Days 6–10): Authentication and event management.
 
-- Configure PostgreSQL
+Milestone 3 (Days 11–16): Ticketing, signed QR tokens, atomic check-in (core complete).
 
-- Set up project structure and role-based navigation
+Milestone 4 (Days 17–20): Real-time dashboard (SSE/WebSocket).
 
-- Define API and data flow structure
+Milestone 5 (Days 21–25): Cloud storage, CSV processing, analytics.
 
-Week 2 – Authentication & Core Event Features
-
-- Implement registration and login
-
-- Implement RBAC and protected routes
-
-- Complete basic Event CRUD functionality
-
-- Build initial Organizer dashboard structure
-
-Week 3 – Ticketing & QR Generation
-
-- Implement TicketTier management
-
-- Implement ticket issuance logic
-
-- Design and implement signed QR token mechanism
-
-- Test ticket state transitions and validation logic
-
-Week 4 – Check-in System
-
-- Implement QR scanning interface
-
-- Develop atomic check-in API (prevent duplicate check-ins)
-
-- Implement check-in logging and validation responses
-
-- Conduct concurrency testing
-
-Week 5 – Real-Time Dashboard & File Processing
-
-- Implement SSE or WebSocket for live updates
-
-- Complete real-time attendance dashboard
-
-- Implement CSV import/export with validation
-
-- Integrate cloud storage for event assets and reports
-
-Week 6 – Optimization & Finalization
-
-- Perform concurrency and security testing
-
-- Optimize mobile responsiveness
-
-- Conduct performance tuning
-
-- Finalize README.md and ai-session.md
-
-- Record demo video and prepare presentation
+Milestone 6 (Days 26–30): Testing, optimization, documentation, demo.
 
 ---
 
 # 4. Initial Independent Reasoning (Before Using AI)
 
 ## 4.1 Application Structure and Architecture
-Before consulting any AI tools, our team discussed two architectural options: a separated frontend-backend architecture using Express, and a Next.js full-stack approach using App Router and Server Actions.
 
-We ultimately selected a Next.js full-stack architecture for the following reasons:
-
-- Reduced complexity in deployment (single application rather than two services)
-
-- Direct use of Server Actions for ticket issuance and validation logic
-
-- Better integration between UI components and backend logic
-
-Faster development velocity within the limited timeline
-
-We determined that while a separated architecture might offer stronger service isolation, the additional overhead in API management and deployment orchestration was unnecessary for the scope of this course project.
+Before using AI, we compared a separated frontend-backend architecture (Express) with a Next.js full-stack approach. We selected Next.js full-stack to reduce deployment complexity, simplify API management, and accelerate development within the project timeline. While separated services offer stronger isolation, the added overhead was unnecessary for this scope.
 
 ## 4.2 Data and State Design
 
-We categorized system state into two layers:
+We divided system state into:
 
-Durable State (Persistent)
+- Durable state (PostgreSQL): users, events, ticket tiers, ticket status, and check-in records.
+- Live state: attendance count and recent check-ins, synchronized via SSE or WebSocket.
 
-- Users, roles, events, ticket tiers
-
-- Ticket status (UNUSED / USED / CANCELLED)
-
-- Check-in timestamps and staff records
-
-This data will be stored in PostgreSQL to ensure consistency and transactional integrity.
-
-Live State (Real-Time)
-
-- Current attendance count
-
-- Recent check-in events
-
-- Remaining ticket quota per tier
-
-Live state will be synchronized using SSE or WebSocket to ensure that dashboard views update instantly without page refresh.
-
-We identified ticket status transition as the most critical consistency point in the system. To prevent duplicate check-ins, we plan to use a conditional atomic update in the database to ensure a ticket can only transition from UNUSED to USED once.
+The most critical consistency point is ticket status transition. To prevent duplicate check-ins, we will use an atomic conditional database update to ensure each ticket can only be used once.
 
 ## 4.3 Feature Selection and Scope Decisions
 
-When selecting advanced features, we prioritized:
-
-- Authentication and role-based authorization (essential for secure access)
-
-- Real-time check-in dashboard (demonstrates full-stack integration)
-
-- Non-trivial file processing (CSV import/export)
-
-- Secure QR validation mechanism
-
-We deliberately chose not to integrate real payment gateways, as payment APIs introduce additional complexity, compliance requirements, and edge cases beyond the course scope. Payment logic will be simulated instead.
-
-We also decided against building a dedicated mobile application. Instead, we will focus on responsive web design optimized for mobile scanning usage.
+We prioritized authentication with RBAC, secure QR validation, real-time dashboard updates, and CSV-based file processing. To maintain feasibility, payment integration will be simulated, and a responsive web interface will replace a dedicated mobile app.
 
 ## 4.4 Anticipated Challenges
 
-We identified several potential challenges early on:
-
-- Designing secure QR tokens to prevent duplication and replay attacks
-
-- Ensuring atomic ticket validation under concurrent check-ins
-
-- Implementing stable real-time communication without performance degradation
-
-- Managing role-based UI rendering across multiple dashboards
-
-- Handling camera permissions and mobile scanning reliability
-
-Among these, preventing duplicate or fraudulent check-ins is expected to be the most technically sensitive component.
+Key challenges include secure QR token design, atomic check-in under concurrency, stable real-time updates, and role-based UI separation. Preventing duplicate or fraudulent check-ins is the most technically sensitive area.
 
 ## 4.5 Early Collaboration Plan
 
-We decided to divide work by vertical functional ownership rather than purely frontend/backend roles. Each member will own a core feature area while collaborating on database design and critical validation logic.
-
-We plan to coordinate using:
-
-- Weekly planning meetings
-
-- Pull requests and peer code review
-
-- Shared documentation for database schema and API contracts
-
-Critical components such as ticket validation logic will require joint review to ensure correctness and security.
+We adopted vertical feature ownership with shared review of database schema and security-critical logic. Coordination will rely on weekly meetings, pull requests, and joint validation of ticket verification mechanisms.
 
 ---
 
 # 5. AI Assistance Disclosure
 
-The overall project concept, system architecture choice, and feature selection were developed independently through team discussion prior to using any AI tools.
+The project concept, architecture, and feature planning were developed independently through team discussion before using AI.
 
-AI assistance was used only for:
-
-- Refining wording and improving clarity of technical explanations
-
-- Checking consistency of terminology
-
-- Suggesting alternative phrasing for architectural justification
-
-For example, AI suggested clarifying the distinction between durable state and live state. After reviewing this suggestion, we incorporated the terminology but expanded the explanation to explicitly connect it to ticket validation and real-time dashboard synchronization within our own system design.
-
-All architectural decisions, database modeling choices, and feature scope limitations were determined by the team based on feasibility, course requirements, and time constraints.
+AI was used only to refine wording and clarify terminology (e.g., distinguishing durable and live state). All system design decisions and scope choices were determined by the team based on feasibility and course requirements.
