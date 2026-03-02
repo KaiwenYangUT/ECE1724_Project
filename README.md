@@ -13,21 +13,21 @@ Event management is a recurring need across universities, student clubs, confere
 Common practices include:
 
 - Manual spreadsheets for registration tracking  
-- Email-based ticket confirmations  
-- Paper tickets or static QR codes without validation logic  
-- On-site manual name checking during check-in  
+- Email-based confirmations without structured validation  
+- Static QR codes or paper tickets  
+- On-site manual name checking  
 
-These approaches lead to several problems:
+These approaches create several problems:
 
-- Long check-in queues due to manual verification  
-- Duplicate or fraudulent entries when tickets are shared or screenshots are reused  
-- Lack of real-time attendance tracking, making it difficult for organizers to monitor event capacity  
-- Limited analytics, preventing organizers from learning from past events  
-- Poor user experience, especially on mobile devices  
+- Long check-in queues due to slow verification  
+- Duplicate or fraudulent entries when tickets are shared  
+- No real-time tracking of attendance or remaining capacity  
+- Limited post-event analytics  
+- Poor mobile experience during on-site check-in  
 
-While commercial platforms such as Eventbrite or Ticketmaster exist, they are often too complex, expensive, or feature-heavy for smaller organizations. Many student clubs and internal university events require a lightweight, customizable solution that fits their specific workflows.
+Although commercial platforms such as Eventbrite or Ticketmaster exist, they are often too complex or expensive for smaller organizations. As a result, many student clubs and internal events revert to inefficient manual workflows.
 
-Therefore, there is a clear need for a streamlined, modern, and technically robust full-stack event ticketing and QR-based check-in system.
+There is therefore a clear need for a streamlined, secure, and customizable full-stack event ticketing and QR-based check-in system.
 
 ---
 
@@ -37,52 +37,34 @@ This project is worth pursuing for three main reasons.
 
 ### 1. Real-World Practical Impact
 
-A well-designed ticketing and QR check-in platform directly improves operational efficiency for event organizers and enhances the experience for attendees. Real-time validation reduces fraud and congestion, while automated workflows minimize administrative burden.
+A well-designed ticketing and QR check-in platform improves operational efficiency and enhances attendee experience. Automated ticket generation and secure QR validation reduce administrative workload and minimize fraud. Real-time dashboards allow organizers to monitor attendance instantly and manage event capacity effectively.
 
-The system can:
+The system enables:
 
-- Automate ticket generation and email confirmations  
-- Generate unique, secure QR codes per attendee  
-- Validate tickets instantly during check-in  
-- Provide real-time dashboards for attendance tracking  
-- Offer post-event analytics for decision-making  
+- Secure QR code generation per attendee  
+- Instant ticket validation during check-in  
+- Real-time attendance tracking  
+- Structured data collection for post-event analysis  
 
-These capabilities transform event management from a manual process into a scalable digital workflow.
+These capabilities transform event management from a manual process into a reliable and scalable digital workflow.
 
 ### 2. Strong Alignment with Full-Stack Architecture
 
-An event ticketing system naturally requires a complete full-stack architecture:
+An event ticketing system naturally requires integrated frontend interfaces, backend APIs, authentication mechanisms, database design, and real-time updates. It provides an opportunity to implement role-based access control (Organizer, Staff, Attendee), secure data handling, and structured relational storage.
 
-- Frontend: Registration forms, ticket dashboard, mobile check-in interface  
-- Backend: RESTful APIs, authentication, QR validation logic  
-- Database: Transaction data, user roles, attendance records  
-- File handling: Event assets (images, logos), QR code generation  
-- Real-time updates: Live attendance dashboard  
-
-This makes it an ideal project for demonstrating mastery of modern web technologies including:
-
-- TypeScript (frontend and backend)  
-- React or Next.js  
-- Express or Next.js API routes  
-- PostgreSQL  
-- Authentication systems  
-- Real-time communication  
-- Cloud storage integration  
-
-The project is neither trivial nor overly ambitious — it is well-scoped and realistic within the course timeline.
+The project is technically meaningful without being overly ambitious. It demonstrates core full-stack competencies while remaining realistic within the course timeline.
 
 ### 3. Technical Depth and Scalability
 
-This system introduces non-trivial technical challenges such as:
+The system introduces non-trivial technical challenges, including:
 
 - Secure QR code generation and validation  
 - Preventing duplicate check-ins  
-- Role-based access control (Organizer, Staff, Attendee)  
-- Real-time synchronization of check-in status  
+- Real-time synchronization of attendance status  
 - Handling ticket tiers, discount codes, and waitlists  
-- Ensuring mobile responsiveness for on-site scanning  
+- Ensuring responsive mobile check-in interfaces  
 
-These features require careful backend design, state management, and database modeling, making the project technically meaningful and educational.
+Addressing these challenges requires careful backend logic, database modeling, and state management, making the project educational and technically substantial.
 
 ---
 
@@ -92,56 +74,40 @@ The primary target users are:
 
 ### 1. Event Organizers
 
-- University clubs  
-- Student associations  
-- Workshop and hackathon hosts  
-- Small conference coordinators  
-- Community event planners  
+University clubs, student associations, conference coordinators, and community planners who need tools to:
 
-Organizers need tools to create events, configure ticket tiers, monitor registrations, and analyze attendance efficiently.
+- Create and manage events  
+- Configure ticket tiers  
+- Track registrations and attendance  
+- Monitor real-time check-in data  
 
 ### 2. Event Staff
 
-- Volunteers responsible for on-site check-in  
-- Administrative assistants  
+Volunteers or assistants responsible for on-site check-in who require:
 
-Staff require a fast, mobile-friendly interface to scan QR codes and validate tickets in real time.
+- A mobile-friendly interface  
+- Fast QR validation  
+- Immediate feedback on ticket status  
 
 ### 3. Attendees
 
-- Students  
-- Professionals  
-- Community participants  
+Students, professionals, and community participants who benefit from:
 
-Attendees benefit from:
-
-- Easy online registration  
+- Simple online registration  
 - Secure QR-based entry  
-- Clear confirmation emails  
-- Smooth and fast check-in experience  
+- A smooth and efficient check-in experience  
 
-By clearly separating these user roles, the system ensures proper authorization and tailored user experiences.
+By clearly defining these roles, the system ensures appropriate authorization and tailored user experiences.
 
 ---
 
 ## Existing Solutions and Their Limitations
 
-Existing platforms like Eventbrite and Ticketmaster offer comprehensive solutions but may not be ideal for smaller-scale events due to:
+Commercial platforms such as Eventbrite provide comprehensive services but may involve high fees and limited customization for smaller events.
 
-- High service fees  
-- Limited customization for niche workflows  
-- Overly complex interfaces  
-- Vendor lock-in  
-- Restricted data access  
+In contrast, simpler solutions like Google Forms combined with spreadsheets lack secure validation, real-time tracking, and analytics capabilities.
 
-Additionally, many small organizations resort to Google Forms combined with spreadsheets, which lack:
-
-- Secure ticket validation  
-- Real-time check-in tracking  
-- Automated QR generation  
-- Attendance analytics  
-
-Our system aims to provide a balanced alternative: technically robust yet lightweight and customizable.
+Our system aims to offer a balanced alternative: lightweight, secure, and customizable while maintaining structured data management and real-time functionality.
 
 ---
 
