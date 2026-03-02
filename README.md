@@ -210,7 +210,7 @@ Regarding feasibility, our development will follow a phased approach in which we
 
 We adopt a vertical ownership model with shared review of security- and consistency-critical logic.
 
-Member A – Authentication & Security
+Rosalind Wang – Authentication & Security
 
 - Registration and login
 
@@ -224,7 +224,7 @@ Member A – Authentication & Security
 
 - Security testing
 
-Member B – Event & Ticket Core Logic
+Tianqi Ju – Event & Ticket Core Logic
 
 - Event management
 
@@ -236,7 +236,7 @@ Member B – Event & Ticket Core Logic
 
 - Database schema optimization
 
-Member C – Check-in & Real-Time
+Eric Wang – Check-in & Real-Time
 
 - Mobile QR scanning interface
 
@@ -246,7 +246,7 @@ Member C – Check-in & Real-Time
 
 - Real-time dashboard and logs
 
-Member D – File Processing, Analytics & Deployment
+Kaiwen Yang – File Processing, Analytics & Deployment
 
 - Cloud storage integration
 
