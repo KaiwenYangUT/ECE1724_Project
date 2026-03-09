@@ -1,36 +1,88 @@
-This is a [Next.js](https://nextjs.org) project bootstrapped with [`create-next-app`](https://nextjs.org/docs/app/api-reference/cli/create-next-app).
+# Event Ticketing Platform
 
-## Getting Started
+This repository contains the Event Ticketing and QR Check-in System built with Next.js, TypeScript, Prisma, and PostgreSQL.
 
-First, run the development server:
+## Progress Overview
+
+Current status:
+
+- ✅ 1. app setup
+- ✅ 2. database schema
+- ✅ 3. auth + roles
+- ⏳ 4. event management
+- ⏳ 5. ticket purchase/registration
+- ⏳ 6. QR generation
+- ⏳ 7. check-in logic
+- ⏳ 8. real-time dashboard
+- ⏳ 9. cloud file storage
+- ⏳ 10. analytics/reporting
+- ⏳ 11. extra features
+- ⏳ 12. testing + deployment
+
+## What Is Already Implemented (Steps 1-3)
+
+- Next.js App Router project structure with TypeScript
+- Prisma + PostgreSQL connection and migration setup
+- `User` model with role support (`ORGANIZER`, `STAFF`, `ATTENDEE`)
+- Authentication utilities:
+	- password hashing/verification
+	- JWT generation/verification
+- Auth APIs:
+	- `POST /api/auth/register`
+	- `POST /api/auth/login`
+- Protected route middleware with role-based checks
+
+## What Is Left To Implement (Steps 4-12)
+
+- Event CRUD management (create/update/list/details)
+- Ticket purchase/registration flow
+- QR code generation and ticket binding
+- Check-in workflow and validation logic
+- Real-time organizer/staff dashboard
+- Cloud file upload and storage for event assets
+- Analytics/reporting endpoints and UI
+- Extra features and polish
+- Full testing strategy and deployment pipeline
+
+## Local Setup
+
+1. Install dependencies
+
+```bash
+npm install
+```
+
+2. Configure environment in `.env`
+
+```env
+DATABASE_URL="postgresql://postgres:password@localhost:5432/event_ticketing"
+JWT_SECRET="change-this-in-production"
+```
+
+3. Run migrations
+
+```bash
+npx prisma migrate dev
+```
+
+4. Start the app
 
 ```bash
 npm run dev
-# or
-yarn dev
-# or
-pnpm dev
-# or
-bun dev
 ```
 
-Open [http://localhost:3000](http://localhost:3000) with your browser to see the result.
+Open: [http://localhost:3000](http://localhost:3000)
 
-You can start editing the page by modifying `app/page.tsx`. The page auto-updates as you edit the file.
+## Team Notes
 
-This project uses [`next/font`](https://nextjs.org/docs/app/building-your-application/optimizing/fonts) to automatically optimize and load [Geist](https://vercel.com/font), a new font family for Vercel.
+- If you add or change Prisma models, run:
 
-## Learn More
+```bash
+npx prisma migrate dev --name <migration_name>
+```
 
-To learn more about Next.js, take a look at the following resources:
+- After schema changes, regenerate Prisma client if needed:
 
-- [Next.js Documentation](https://nextjs.org/docs) - learn about Next.js features and API.
-- [Learn Next.js](https://nextjs.org/learn) - an interactive Next.js tutorial.
-
-You can check out [the Next.js GitHub repository](https://github.com/vercel/next.js) - your feedback and contributions are welcome!
-
-## Deploy on Vercel
-
-The easiest way to deploy your Next.js app is to use the [Vercel Platform](https://vercel.com/new?utm_medium=default-template&filter=next.js&utm_source=create-next-app&utm_campaign=create-next-app-readme) from the creators of Next.js.
-
-Check out our [Next.js deployment documentation](https://nextjs.org/docs/app/building-your-application/deploying) for more details.
+```bash
+npx prisma generate
+```
