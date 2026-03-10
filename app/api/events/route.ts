@@ -58,7 +58,7 @@ export async function GET() {
 
     return NextResponse.json(
       {
-        events: events.map((event) => ({
+        events: events.map((event: (typeof events)[number]) => ({
           id: event.id,
           title: event.title,
           description: event.description,
@@ -67,7 +67,7 @@ export async function GET() {
           bannerImageUrl: event.bannerImageUrl,
           createdAt: event.createdAt,
           organizer: event.organizer,
-          ticketTiers: event.ticketTiers.map((tier) => ({
+          ticketTiers: event.ticketTiers.map((tier: (typeof event.ticketTiers)[number])=> ({
             id: tier.id,
             name: tier.name,
             price: Number(tier.price),
@@ -173,7 +173,7 @@ export async function POST(request: NextRequest) {
         bannerImageUrl: bannerImageUrl || null,
         organizerId: organizer.id,
         ticketTiers: {
-          create: ticketTiers.map((tier) => ({
+          create: ticketTiers.map((tier: (typeof event.ticketTiers)[number]) => ({
             name: tier.name,
             price: tier.price,
             quantityLimit: tier.quantityLimit,
@@ -205,7 +205,7 @@ export async function POST(request: NextRequest) {
           location: event.location,
           bannerImageUrl: event.bannerImageUrl,
           organizer: event.organizer,
-          ticketTiers: event.ticketTiers.map((tier) => ({
+          ticketTiers: event.ticketTiers.map((tier: (typeof event.ticketTiers)[number]) => ({
             id: tier.id,
             name: tier.name,
             price: Number(tier.price),
