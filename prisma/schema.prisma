@@ -26,4 +26,59 @@ model User {
   passwordHash String
   role         UserRole @default(ATTENDEE)
   createdAt    DateTime @default(now())
+  
+  organizedEvents Event[]  @relation("OrganizerEvents")
+  tickets         Ticket[]
+}
+
+model Event {
+  id             String      @id @default(cuid())
+  title          String
+  description    String
+  dateTime       DateTime
+  location       String
+  organizerId    String
+  bannerImageUrl String?
+  createdAt      DateTime    @default(now())
+  updatedAt      DateTime    @updatedAt
+
+  organizer   User         @relation("OrganizerEvents", fields: [organizerId], references: [id], onDelete: Cascade)
+  ticketTiers TicketTier[]
+  tickets     Ticket[]
+}
+
+model TicketTier {
+  id            String   @id @default(cuid())
+  eventId       String
+  name          String
+  price         Decimal  @db.Decimal(10, 2)
+  quantityLimit Int
+  createdAt     DateTime @default(now())
+  updatedAt     DateTime @updatedAt
+
+  event   Event    @relation(fields: [eventId], references: [id], onDelete: Cascade)
+  tickets Ticket[]
+
+  @@index([eventId])
+}
+
+model Ticket {
+  id             String    @id @default(cuid())
+  userId         String
+  eventId        String
+  ticketTierId   String
+  qrCodeToken    String    @unique
+  qrCodeDataUrl  String?
+  checkInStatus  Boolean   @default(false)
+  checkInTime    DateTime?
+  createdAt      DateTime  @default(now())
+
+  user       User       @relation(fields: [userId], references: [id], onDelete: Cascade)
+  event      Event      @relation(fields: [eventId], references: [id], onDelete: Cascade)
+  ticketTier  TicketTier @relation(fields: [ticketTierId], references: [id], onDelete: Cascade)
+
+  @@index([userId])
+  @@index([eventId])
+  @@index([ticketTierId])
+  @@unique([userId, ticketTierId])
 }
