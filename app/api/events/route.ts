@@ -1,11 +1,16 @@
 import { NextResponse, NextRequest } from "next/server";
 
+
 import { z } from "zod";
 
 import prisma from "@/lib/prisma";
 
+
 import { verifyToken } from "@/lib/auth/jwt";
 
+
+// Try to get JWT token from Authorization header first.
+// If not found, then try to get it from cookies.
 function extractToken(request: NextRequest): string | null {
   const authHeader = request.headers.get("authorization");
 
@@ -16,11 +21,14 @@ function extractToken(request: NextRequest): string | null {
   return request.cookies.get("token")?.value ?? null;
 }
 
+// Validate the request body for event creation.
 const createEventSchema = z.object({
   title: z.string().trim().min(1, "Title is required"),
   description: z.string().trim().min(1, "Description is required"),
   dateTime: z.string().trim().min(1, "Date and time are required"),
   location: z.string().trim().min(1, "Location is required"),
+
+  // Optional, but if provided must be a valid URL
   bannerImageUrl: z.string().trim().url("Banner image URL must be valid").optional().or(z.literal("")),
   ticketTiers: z
     .array(
@@ -33,6 +41,8 @@ const createEventSchema = z.object({
     .min(1, "At least one ticket tier is required"),
 });
 
+
+// Return all events so users can browse available events and ticket tiers.
 export async function GET() {
   try {
     const events = await prisma.event.findMany({
@@ -87,6 +97,8 @@ export async function GET() {
   }
 }
 
+
+// Create a new event for only logged-in organizers.
 export async function POST(request: NextRequest) {
   try {
     const token = extractToken(request);
@@ -130,7 +142,8 @@ export async function POST(request: NextRequest) {
     const { title, description, dateTime, location, bannerImageUrl, ticketTiers } = parsed.data;
 
     const parsedDate = new Date(dateTime);
-
+    
+    // Valid dates
     if (Number.isNaN(parsedDate.getTime())) {
       return NextResponse.json(
         { error: "The event date and time format is invalid." },
@@ -138,6 +151,7 @@ export async function POST(request: NextRequest) {
       );
     }
 
+    // Prevent creating events in the past
     if (parsedDate.getTime() <= Date.now()) {
       return NextResponse.json(
         { error: "The event date and time must be in the future." },
@@ -145,6 +159,7 @@ export async function POST(request: NextRequest) {
       );
     }
 
+    // Double check organizer identity
     const organizer = await prisma.user.findUnique({
       where: { id: payload.sub },
       select: { id: true, role: true },
@@ -164,6 +179,7 @@ export async function POST(request: NextRequest) {
       );
     }
 
+    // Create the event and all of its ticket tiers in one database call
     const event = await prisma.event.create({
       data: {
         title,
