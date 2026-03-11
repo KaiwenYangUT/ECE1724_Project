@@ -1,3 +1,6 @@
+//list page logic & gets all events
+//creates many EventCards
+
 "use client";
 
 import * as React from "react";
@@ -5,7 +8,6 @@ import { useEffect, useState } from "react";
 import EventCard from "@/components/EventCard";
 
 
-export type 
 export type EventItem = {
   id: string;
   title: string;
@@ -30,15 +32,18 @@ export type EventItem = {
 
 
 export default function EventList() {
+  // store all events returned from the backend
   const [events, setEvents] = useState<EventItem[]>([]);
+   // controls the loading state (fetching event data)
   const [loading, setLoading] = useState(true);
+
   const [pageError, setPageError] = useState("");
 
   async function loadEvents() {
     try {
       setLoading(true);
       setPageError("");
-
+      // request all available events from the API
       const response = await fetch("/api/events");
       const data = await response.json();
 
@@ -47,6 +52,7 @@ export default function EventList() {
         return;
       }
 
+      // save fetched events into state
       setEvents(Array.isArray(data?.events) ? data.events : []);
     } catch {
       setPageError("Network error while loading events.");

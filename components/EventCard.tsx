@@ -1,3 +1,7 @@
+// One event’s UI + purchase action
+// handles one event
+// lets user purchase that event’s ticket
+
 "use client";
 
 import * as React from "react";
@@ -6,10 +10,13 @@ import type { EventItem } from "@/components/EventList";
 
 type EventCardProps = {
   event: EventItem;
+  // callback function from parent component
+  // used to refresh event data after a successful purchase
   onPurchased: () => void | Promise<void>;
 };
 
 export default function EventCard({ event, onPurchased }: EventCardProps) {
+  //which ticket tier the user selects
   const [selectedTierId, setSelectedTierId] = useState(
     event.ticketTiers[0]?.id ?? "",
   );
@@ -24,14 +31,16 @@ export default function EventCard({ event, onPurchased }: EventCardProps) {
     setErrorMessage("");
     setQrCodeDataUrl("");
 
+    // get saved login token from browser storage
     const token = localStorage.getItem("token");
 
+    // user must be logged in before purchasing
     if (!token) {
       setLoading(false);
       setErrorMessage("Please log in before purchasing a ticket.");
       return;
     }
-
+    // user must select a tier before purchasing
     if (!selectedTierId) {
       setLoading(false);
       setErrorMessage("Please select a ticket tier.");
@@ -39,6 +48,7 @@ export default function EventCard({ event, onPurchased }: EventCardProps) {
     }
 
     try {
+      // send purchase request to backend
       const response = await fetch("/api/tickets/purchase", {
         method: "POST",
         headers: {
