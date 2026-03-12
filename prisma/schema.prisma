@@ -28,6 +28,7 @@ model User {
   createdAt    DateTime @default(now())
   
   organizedEvents Event[]  @relation("OrganizerEvents")
+  staffEvents     EventStaff[]
   tickets         Ticket[]
 }
 
@@ -43,8 +44,20 @@ model Event {
   updatedAt      DateTime    @updatedAt
 
   organizer   User         @relation("OrganizerEvents", fields: [organizerId], references: [id], onDelete: Cascade)
+  assignedStaff  EventStaff[]
   ticketTiers TicketTier[]
   tickets     Ticket[]
+}
+
+model EventStaff {
+  id        String   @id @default(cuid())
+  eventId   String
+  userId    String
+
+  event     Event    @relation(fields: [eventId], references: [id], onDelete: Cascade)
+  user      User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@unique([eventId, userId])
 }
 
 model TicketTier {
