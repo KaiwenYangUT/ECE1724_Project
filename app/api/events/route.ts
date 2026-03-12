@@ -189,7 +189,7 @@ export async function POST(request: NextRequest) {
         bannerImageUrl: bannerImageUrl || null,
         organizerId: organizer.id,
         ticketTiers: {
-          create: ticketTiers.map((tier: (typeof event.ticketTiers)[number]) => ({
+          create: ticketTiers.map((tier) => ({
             name: tier.name,
             price: tier.price,
             quantityLimit: tier.quantityLimit,
