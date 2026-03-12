@@ -112,18 +112,6 @@ export default function CreateEventForm() {
 
   return (
     <form onSubmit={handleSubmit} className="space-y-5 rounded-2xl border p-6 shadow-sm">
-      {successMessage ? (
-        <div className="rounded-lg border border-green-300 bg-green-50 px-4 py-3 text-sm">
-          {successMessage}
-        </div>
-      ) : null}
-
-      {errorMessage ? (
-        <div className="rounded-lg border border-red-300 bg-red-50 px-4 py-3 text-sm">
-          {errorMessage}
-        </div>
-      ) : null}
-
       <div>
         <label className="mb-1 block text-sm font-medium">Title</label>
         <input
@@ -243,6 +231,19 @@ export default function CreateEventForm() {
       >
         {loading ? "Creating..." : "Create Event"}
       </button>
+      
+     {successMessage ? (
+        <div className="rounded-lg border border-green-300 bg-green-50 px-4 py-3 text-sm">
+          {successMessage}
+        </div>
+      ) : null}
+
+      {errorMessage ? (
+        <div className="rounded-lg border border-red-300 bg-red-50 px-4 py-3 text-sm">
+          {errorMessage}
+        </div>
+      ) : null}
     </form>
+    
   );
 }

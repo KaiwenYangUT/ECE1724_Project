@@ -66,8 +66,8 @@ export default function HomePage() {
                 </>
               ) : (
                 <>
-                  <div className="rounded-xl bg-amber-100 px-5 py-3 text-sm font-semibold text-amber-800">
-                    Hello, {userName || "User"}!
+                  <div className="rounded-xl bg-sky-100 px-5 py-3 text-lg font-semibold text-sky-800">
+                    Hello, {userName || "User"} !
                   </div>
 
                   <button
