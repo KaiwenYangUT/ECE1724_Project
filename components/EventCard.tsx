@@ -23,11 +23,16 @@ type EventCardProps = {
   onDeleted: () => void | Promise<void>;
 };
 
-export default function EventCard({event, currentUser, onPurchased, onDeleted}: EventCardProps) {
+export default function EventCard({
+  event,
+  currentUser,
+  onPurchased,
+  onDeleted,
+}: EventCardProps) {
   const router = useRouter();
-  //which ticket tier the user selects
+
   const [selectedTierId, setSelectedTierId] = useState(
-    event.ticketTiers[0]?.id ?? "",
+    event.ticketTiers[0]?.id ?? ""
   );
   const [loading, setLoading] = useState(false);
   const [successMessage, setSuccessMessage] = useState("");
@@ -35,7 +40,8 @@ export default function EventCard({event, currentUser, onPurchased, onDeleted}: 
   const [qrCodeDataUrl, setQrCodeDataUrl] = useState("");
   const [deleteLoading, setDeleteLoading] = useState(false);
 
-  const canDelete = currentUser?.role === "ORGANIZER" && currentUser?.id === event.organizer.id;
+  const canDelete =
+    currentUser?.role === "ORGANIZER" && currentUser?.id === event.organizer.id;
 
   async function handleDelete() {
     const token = localStorage.getItem("token");
@@ -45,7 +51,9 @@ export default function EventCard({event, currentUser, onPurchased, onDeleted}: 
       return;
     }
 
-    const confirmed = window.confirm("Are you sure you want to delete this event?");
+    const confirmed = window.confirm(
+      "Are you sure you want to delete this event?"
+    );
     if (!confirmed) {
       return;
     }
@@ -69,6 +77,7 @@ export default function EventCard({event, currentUser, onPurchased, onDeleted}: 
         return;
       }
 
+      setSuccessMessage(data?.message || "Event deleted successfully.");
       await onDeleted();
     } catch {
       setErrorMessage("Network error. Please try again.");
@@ -77,26 +86,23 @@ export default function EventCard({event, currentUser, onPurchased, onDeleted}: 
     }
   }
 
-
   async function handlePurchase() {
     setLoading(true);
     setSuccessMessage("");
     setErrorMessage("");
     setQrCodeDataUrl("");
 
-    // get saved login token from browser storage
     const token = localStorage.getItem("token");
 
-    // user must be logged in before purchasing
     if (!token) {
       setLoading(false);
       setErrorMessage("Please log in before purchasing a ticket.");
-        setTimeout(() => {
-          router.push("/");
-        }, 2000);
+      setTimeout(() => {
+        router.push("/");
+      }, 2000);
       return;
     }
-    // user must select a tier before purchasing
+
     if (!selectedTierId) {
       setLoading(false);
       setErrorMessage("Please select a ticket tier.");
@@ -104,7 +110,6 @@ export default function EventCard({event, currentUser, onPurchased, onDeleted}: 
     }
 
     try {
-      // send purchase request to backend
       const response = await fetch("/api/tickets/purchase", {
         method: "POST",
         headers: {
@@ -126,6 +131,17 @@ export default function EventCard({event, currentUser, onPurchased, onDeleted}: 
 
       setSuccessMessage("Ticket purchased successfully.");
       setQrCodeDataUrl(data?.ticket?.qrCodeDataUrl || "");
+
+      const newTicketId = data?.ticket?.id;
+
+      setTimeout(() => {
+        if (newTicketId) {
+          router.push(`/my-tickets?highlight=${newTicketId}`);
+        } else {
+          router.push("/my-tickets");
+        }
+      }, 2000);
+
       await onPurchased();
     } catch {
       setErrorMessage("Network error. Please try again.");
@@ -134,23 +150,22 @@ export default function EventCard({event, currentUser, onPurchased, onDeleted}: 
     }
   }
 
-  // display
   return (
-    <div 
-    className="rounded-2xl border p-5 shadow-sm">
- 
+    <div className="rounded-2xl border p-5 shadow-sm">
       <div className="mb-4 flex items-start justify-between">
         <div className="space-y-2">
           <h2 className="text-xl font-semibold">{event.title}</h2>
           <p className="text-sm text-gray-600">{event.description}</p>
           <p className="text-sm">
-            <span className="font-medium">Date:</span> {new Date(event.dateTime).toLocaleString()}
+            <span className="font-medium">Date:</span>{" "}
+            {new Date(event.dateTime).toLocaleString()}
           </p>
           <p className="text-sm">
             <span className="font-medium">Location:</span> {event.location}
           </p>
           <p className="text-sm">
-            <span className="font-medium">Organizer:</span> {event.organizer.name}
+            <span className="font-medium">Organizer:</span>{" "}
+            {event.organizer.name}
           </p>
         </div>
 
@@ -163,10 +178,12 @@ export default function EventCard({event, currentUser, onPurchased, onDeleted}: 
             {deleteLoading ? "Deleting..." : "Delete Event"}
           </button>
         ) : null}
-      </div>      
+      </div>
 
       <div className="mt-4">
-        <label className="mb-1 block text-sm font-medium">Select Ticket Tier</label>
+        <label className="mb-1 block text-sm font-medium">
+          Select Ticket Tier
+        </label>
         <select
           className="w-full rounded-lg border px-3 py-2"
           value={selectedTierId}
