@@ -9,14 +9,21 @@ import { useState } from "react";
 import type { EventItem } from "@/components/EventList";
 import { useRouter } from "next/navigation";
 
-type EventCardProps = {
-  event: EventItem;
-  // callback function from parent component
-  // used to refresh event data after a successful purchase
-  onPurchased: () => void | Promise<void>;
+type StoredUser = {
+  id: string;
+  name: string;
+  email: string;
+  role: string;
 };
 
-export default function EventCard({ event, onPurchased }: EventCardProps) {
+type EventCardProps = {
+  event: EventItem;
+  currentUser: StoredUser | null;
+  onPurchased: () => void | Promise<void>;
+  onDeleted: () => void | Promise<void>;
+};
+
+export default function EventCard({event, currentUser, onPurchased, onDeleted}: EventCardProps) {
   const router = useRouter();
   //which ticket tier the user selects
   const [selectedTierId, setSelectedTierId] = useState(
@@ -26,6 +33,50 @@ export default function EventCard({ event, onPurchased }: EventCardProps) {
   const [successMessage, setSuccessMessage] = useState("");
   const [errorMessage, setErrorMessage] = useState("");
   const [qrCodeDataUrl, setQrCodeDataUrl] = useState("");
+  const [deleteLoading, setDeleteLoading] = useState(false);
+
+  const canDelete = currentUser?.role === "ORGANIZER" && currentUser?.id === event.organizer.id;
+
+  async function handleDelete() {
+    const token = localStorage.getItem("token");
+
+    if (!token) {
+      setErrorMessage("Please log in first.");
+      return;
+    }
+
+    const confirmed = window.confirm("Are you sure you want to delete this event?");
+    if (!confirmed) {
+      return;
+    }
+
+    try {
+      setDeleteLoading(true);
+      setErrorMessage("");
+      setSuccessMessage("");
+
+      const response = await fetch(`/api/events/${event.id}`, {
+        method: "DELETE",
+        headers: {
+          Authorization: `Bearer ${token}`,
+        },
+      });
+
+      const data = await response.json();
+
+      if (!response.ok) {
+        setErrorMessage(data?.error || "Failed to delete event.");
+        return;
+      }
+
+      await onDeleted();
+    } catch {
+      setErrorMessage("Network error. Please try again.");
+    } finally {
+      setDeleteLoading(false);
+    }
+  }
+
 
   async function handlePurchase() {
     setLoading(true);
@@ -85,21 +136,34 @@ export default function EventCard({ event, onPurchased }: EventCardProps) {
 
   // display
   return (
-    <div className="rounded-2xl border p-5 shadow-sm">
-      <div className="space-y-2">
-        <h2 className="text-xl font-semibold">{event.title}</h2>
-        <p className="text-sm text-gray-600">{event.description}</p>
-        <p className="text-sm">
-          <span className="font-medium">Date:</span>{" "}
-          {new Date(event.dateTime).toLocaleString()}
-        </p>
-        <p className="text-sm">
-          <span className="font-medium">Location:</span> {event.location}
-        </p>
-        <p className="text-sm">
-          <span className="font-medium">Organizer:</span> {event.organizer.name}
-        </p>
-      </div>
+    <div 
+    className="rounded-2xl border p-5 shadow-sm">
+ 
+      <div className="mb-4 flex items-start justify-between">
+        <div className="space-y-2">
+          <h2 className="text-xl font-semibold">{event.title}</h2>
+          <p className="text-sm text-gray-600">{event.description}</p>
+          <p className="text-sm">
+            <span className="font-medium">Date:</span> {new Date(event.dateTime).toLocaleString()}
+          </p>
+          <p className="text-sm">
+            <span className="font-medium">Location:</span> {event.location}
+          </p>
+          <p className="text-sm">
+            <span className="font-medium">Organizer:</span> {event.organizer.name}
+          </p>
+        </div>
+
+        {canDelete ? (
+          <button
+            onClick={handleDelete}
+            disabled={deleteLoading}
+            className="ml-4 rounded-lg bg-red-600 px-4 py-2 text-sm font-medium text-white disabled:opacity-50"
+          >
+            {deleteLoading ? "Deleting..." : "Delete Event"}
+          </button>
+        ) : null}
+      </div>      
 
       <div className="mt-4">
         <label className="mb-1 block text-sm font-medium">Select Ticket Tier</label>

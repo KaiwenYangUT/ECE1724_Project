@@ -30,6 +30,12 @@ export type EventItem = {
   }[];
 };
 
+type StoredUser = {
+  id: string;
+  name: string;
+  email: string;
+  role: string;
+};
 
 export default function EventList() {
   // store all events returned from the backend
@@ -38,6 +44,9 @@ export default function EventList() {
   const [loading, setLoading] = useState(true);
 
   const [pageError, setPageError] = useState("");
+
+  const [currentUser, setCurrentUser] = useState<StoredUser | null>(null);
+
 
   async function loadEvents() {
     try {
@@ -62,6 +71,15 @@ export default function EventList() {
   }
 
   useEffect(() => {
+    const storedUser = localStorage.getItem("user");
+
+    if (storedUser) {
+      try {
+        setCurrentUser(JSON.parse(storedUser));
+      } catch {
+        setCurrentUser(null);
+      }
+    }
     void loadEvents();
   }, []);
 
@@ -79,7 +97,12 @@ export default function EventList() {
   return (
     <div className="space-y-5">
       {events.map((event) => (
-        <EventCard key={event.id} event={event} onPurchased={loadEvents} />
+        <EventCard
+        key={event.id}
+        event={event}
+        currentUser={currentUser}
+        onPurchased={loadEvents}
+        onDeleted={loadEvents} />
       ))}
     </div>
   );
