@@ -3,75 +3,89 @@
 import * as React from "react";
 import { useState } from "react";
 import { UserRole } from "@prisma/client";
-
+import { useRouter } from "next/navigation";
 
 export default function RegisterForm() {
-    const [name, setName] = useState("");
-    const [email, setEmail] = useState("");
-    const [password, setPassword] = useState("");
-    const [role, setRole] = useState<UserRole | "">("");    const [loading, setLoading] = useState(false);
-    const [successMessage, setSuccessMessage] = useState("");
-    const [errorMessage, setErrorMessage] = useState("");
+  const [name, setName] = useState("");
+  const [email, setEmail] = useState("");
+  const [password, setPassword] = useState("");
+  const [role, setRole] = useState<UserRole | "">("");
+  const [loading, setLoading] = useState(false);
+  const [successMessage, setSuccessMessage] = useState("");
+  const [errorMessage, setErrorMessage] = useState("");
+  const router = useRouter();
 
-    function resetForm() {
+  function resetForm() {
     setName("");
     setEmail("");
     setPassword("");
     setRole("");
   }
 
-    async function handleRegister(e: React.SyntheticEvent<HTMLFormElement>){
-        e.preventDefault();
-        setLoading(true);
-        setSuccessMessage("");
-        setErrorMessage("");
+  async function handleRegister(e: React.SyntheticEvent<HTMLFormElement>) {
+    e.preventDefault();
+    setLoading(true);
+    setSuccessMessage("");
+    setErrorMessage("");
 
-        try{
-            const response = await fetch("/api/auth/register", {
-                method: "POST",
-                headers: {
-                    "Content-Type": "application/json",
-                },
-                body: JSON.stringify({
-                    name,
-                    email,
-                    password,
-                    role,
-                })
-            });
-        
-        const data = await response.json();
+    try {
+      const response = await fetch("/api/auth/register", {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+        },
+        body: JSON.stringify({
+          name,
+          email,
+          password,
+          role,
+        }),
+      });
+
+      const data = await response.json();
 
       if (!response.ok) {
         if (data?.error) {
           setErrorMessage(data.error);
         } else {
-          setErrorMessage("Failed to Register!");
+          setErrorMessage("Failed to register!");
         }
         return;
       }
 
-      setSuccessMessage("User registered successfully.");
-      resetForm();    
-    }catch {
+      setSuccessMessage(
+        "User registered successfully. Returning to the main page in 3 seconds..."
+      );
+      resetForm();
+
+      setTimeout(() => {
+        router.push("/");
+        router.refresh();
+      }, 3000);
+    } catch {
       setErrorMessage("Network error. Please try again.");
     } finally {
       setLoading(false);
     }
-    }
+  }
 
+  if (successMessage) {
     return (
+
+      <div className="rounded-2xl border border-green-300 bg-green-50 p-6 shadow-sm">
+        <div className="mt-4 rounded-xl border border-green-300 bg-white px-5 py-4 text-base font-semibold text-green-800">
+          {successMessage}
+        </div>
+      </div>
+    );
+  }
+
+  return (
     <form
       onSubmit={handleRegister}
       className="space-y-5 rounded-2xl border p-6 shadow-sm"
     >
       <h1 className="text-2xl font-semibold">Register</h1>
-
-      {successMessage ? (
-        <div className="rounded-lg border border-green-300 bg-green-50 px-4 py-3 text-sm">
-          {successMessage}
-        </div>
-      ) : null}
 
       {errorMessage ? (
         <div className="rounded-lg border border-red-300 bg-red-50 px-4 py-3 text-sm">
@@ -139,6 +153,4 @@ export default function RegisterForm() {
       </button>
     </form>
   );
-
-
 }

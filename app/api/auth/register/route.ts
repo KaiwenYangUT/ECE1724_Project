@@ -8,7 +8,7 @@ import { hashPassword } from "@/lib/auth/hash";
 const registerSchema = z.object({
   name: z.string().trim().min(1, "Name is required"),
   email: z.email("Invalid email address").transform((value) => value.toLowerCase()),
-  password: z.string().min(8, "Password must be at least 8 characters"),
+  password: z.string().min(6, "Password must be at least 8 characters"),
   role: z.enum(UserRole),
 });
 

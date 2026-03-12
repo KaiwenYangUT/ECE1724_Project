@@ -7,6 +7,7 @@
 import * as React from "react";
 import { useState } from "react";
 import type { EventItem } from "@/components/EventList";
+import { useRouter } from "next/navigation";
 
 type EventCardProps = {
   event: EventItem;
@@ -16,6 +17,7 @@ type EventCardProps = {
 };
 
 export default function EventCard({ event, onPurchased }: EventCardProps) {
+  const router = useRouter();
   //which ticket tier the user selects
   const [selectedTierId, setSelectedTierId] = useState(
     event.ticketTiers[0]?.id ?? "",
@@ -38,6 +40,9 @@ export default function EventCard({ event, onPurchased }: EventCardProps) {
     if (!token) {
       setLoading(false);
       setErrorMessage("Please log in before purchasing a ticket.");
+        setTimeout(() => {
+          router.push("/");
+        }, 2000);
       return;
     }
     // user must select a tier before purchasing
@@ -128,7 +133,7 @@ export default function EventCard({ event, onPurchased }: EventCardProps) {
         disabled={loading || event.ticketTiers.length === 0}
         className="mt-4 rounded-lg bg-black px-4 py-2 text-white disabled:opacity-50"
       >
-        {loading ? "Processing..." : "Purchase / Register"}
+        {loading ? "Processing..." : "Purchase"}
       </button>
 
       {qrCodeDataUrl ? (

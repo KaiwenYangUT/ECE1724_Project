@@ -86,13 +86,15 @@ export default function LoginForm() {
       // save basic user info too
       if (data.user) {
         localStorage.setItem("user", JSON.stringify(data.user));
+        localStorage.setItem("userName", data.user.name);
+        localStorage.setItem("userRole", data.user.role);
       }
 
       setSuccessMessage(data.message || "Login successful.");
 
       // redirect after successful login
       //"/" or "/my-tickets"??
-      router.push("/my-tickets");
+      router.push("/");
       router.refresh();
     } catch {
       setErrorMessage("Network error. Please try again.");
