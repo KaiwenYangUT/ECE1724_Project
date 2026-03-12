@@ -1,7 +1,3 @@
-// One event’s UI + purchase action
-// handles one event
-// lets user purchase that event’s ticket
-
 "use client";
 
 import * as React from "react";
@@ -35,10 +31,9 @@ export default function EventCard({
     event.ticketTiers[0]?.id ?? ""
   );
   const [loading, setLoading] = useState(false);
-  const [successMessage, setSuccessMessage] = useState("");
   const [errorMessage, setErrorMessage] = useState("");
-  const [qrCodeDataUrl, setQrCodeDataUrl] = useState("");
   const [deleteLoading, setDeleteLoading] = useState(false);
+  const [showSuccessPopup, setShowSuccessPopup] = useState(false);
 
   const canDelete =
     currentUser?.role === "ORGANIZER" && currentUser?.id === event.organizer.id;
@@ -61,7 +56,6 @@ export default function EventCard({
     try {
       setDeleteLoading(true);
       setErrorMessage("");
-      setSuccessMessage("");
 
       const response = await fetch(`/api/events/${event.id}`, {
         method: "DELETE",
@@ -77,7 +71,6 @@ export default function EventCard({
         return;
       }
 
-      setSuccessMessage(data?.message || "Event deleted successfully.");
       await onDeleted();
     } catch {
       setErrorMessage("Network error. Please try again.");
@@ -86,11 +79,10 @@ export default function EventCard({
     }
   }
 
+
   async function handlePurchase() {
     setLoading(true);
-    setSuccessMessage("");
     setErrorMessage("");
-    setQrCodeDataUrl("");
 
     const token = localStorage.getItem("token");
 
@@ -129,10 +121,10 @@ export default function EventCard({
         return;
       }
 
-      setSuccessMessage("Ticket purchased successfully.");
-      setQrCodeDataUrl(data?.ticket?.qrCodeDataUrl || "");
-
       const newTicketId = data?.ticket?.id;
+
+      setShowSuccessPopup(true);
+      setLoading(false);
 
       setTimeout(() => {
         if (newTicketId) {
@@ -141,92 +133,87 @@ export default function EventCard({
           router.push("/my-tickets");
         }
       }, 2000);
-
-      await onPurchased();
     } catch {
       setErrorMessage("Network error. Please try again.");
-    } finally {
       setLoading(false);
     }
   }
 
   return (
-    <div className="rounded-2xl border p-5 shadow-sm">
-      <div className="mb-4 flex items-start justify-between">
-        <div className="space-y-2">
-          <h2 className="text-xl font-semibold">{event.title}</h2>
-          <p className="text-sm text-gray-600">{event.description}</p>
-          <p className="text-sm">
-            <span className="font-medium">Date:</span>{" "}
-            {new Date(event.dateTime).toLocaleString()}
-          </p>
-          <p className="text-sm">
-            <span className="font-medium">Location:</span> {event.location}
-          </p>
-          <p className="text-sm">
-            <span className="font-medium">Organizer:</span>{" "}
-            {event.organizer.name}
-          </p>
+    <>
+      {showSuccessPopup ? (
+        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/30">
+          <div className="w-[90%] max-w-md rounded-2xl border border-green-300 bg-white px-6 py-8 text-center shadow-xl">
+            <h3 className="text-xl font-semibold text-green-700">
+              Ticket purchased successfully
+            </h3>
+            <p className="mt-2 text-sm text-green-600">
+              Going to My Tickets...
+            </p>
+          </div>
+        </div>
+      ) : null}
+
+      <div className="mx-auto my-6 w-full max-w-4xl rounded-2xl border bg-white p-6 shadow-sm">
+        <div className="mb-4 flex items-start justify-between gap-4">
+          <div className="space-y-2">
+            <h2 className="text-xl font-semibold">{event.title}</h2>
+            <p className="text-sm text-gray-600">{event.description}</p>
+            <p className="text-sm">
+              <span className="font-medium">Date:</span>{" "}
+              {new Date(event.dateTime).toLocaleString()}
+            </p>
+            <p className="text-sm">
+              <span className="font-medium">Location:</span> {event.location}
+            </p>
+            <p className="text-sm">
+              <span className="font-medium">Organizer:</span>{" "}
+              {event.organizer.name}
+            </p>
+          </div>
+
+          {canDelete ? (
+            <button
+              onClick={handleDelete}
+              disabled={deleteLoading}
+              className="shrink-0 rounded-lg bg-red-600 px-4 py-2 text-sm font-medium text-white disabled:opacity-50"
+            >
+              {deleteLoading ? "Deleting..." : "Delete Event"}
+            </button>
+          ) : null}
         </div>
 
-        {canDelete ? (
-          <button
-            onClick={handleDelete}
-            disabled={deleteLoading}
-            className="ml-4 rounded-lg bg-red-600 px-4 py-2 text-sm font-medium text-white disabled:opacity-50"
+        <div className="mt-4">
+          <label className="mb-1 block text-sm font-medium">
+            Select Ticket Tier
+          </label>
+          <select
+            className="w-full rounded-lg border px-3 py-2"
+            value={selectedTierId}
+            onChange={(e) => setSelectedTierId(e.target.value)}
           >
-            {deleteLoading ? "Deleting..." : "Delete Event"}
-          </button>
+            {event.ticketTiers.map((tier) => (
+              <option key={tier.id} value={tier.id}>
+                {tier.name} - ${tier.price.toFixed(2)} - {tier.remaining} remaining
+              </option>
+            ))}
+          </select>
+        </div>
+
+        {errorMessage ? (
+          <div className="mt-4 rounded-lg border border-red-300 bg-red-50 px-4 py-3 text-sm text-red-700">
+            {errorMessage}
+          </div>
         ) : null}
-      </div>
 
-      <div className="mt-4">
-        <label className="mb-1 block text-sm font-medium">
-          Select Ticket Tier
-        </label>
-        <select
-          className="w-full rounded-lg border px-3 py-2"
-          value={selectedTierId}
-          onChange={(e) => setSelectedTierId(e.target.value)}
+        <button
+          onClick={handlePurchase}
+          disabled={loading || event.ticketTiers.length === 0 || showSuccessPopup}
+          className="mt-4 rounded-lg bg-black px-4 py-2 text-white disabled:opacity-50"
         >
-          {event.ticketTiers.map((tier) => (
-            <option key={tier.id} value={tier.id}>
-              {tier.name} - ${tier.price.toFixed(2)} - {tier.remaining} remaining
-            </option>
-          ))}
-        </select>
+          {loading ? "Processing..." : "Purchase"}
+        </button>
       </div>
-
-      {successMessage ? (
-        <div className="mt-4 rounded-lg border border-green-300 bg-green-50 px-4 py-3 text-sm">
-          {successMessage}
-        </div>
-      ) : null}
-
-      {errorMessage ? (
-        <div className="mt-4 rounded-lg border border-red-300 bg-red-50 px-4 py-3 text-sm">
-          {errorMessage}
-        </div>
-      ) : null}
-
-      <button
-        onClick={handlePurchase}
-        disabled={loading || event.ticketTiers.length === 0}
-        className="mt-4 rounded-lg bg-black px-4 py-2 text-white disabled:opacity-50"
-      >
-        {loading ? "Processing..." : "Purchase"}
-      </button>
-
-      {qrCodeDataUrl ? (
-        <div className="mt-5">
-          <p className="mb-2 text-sm font-medium">Generated QR Code</p>
-          <img
-            src={qrCodeDataUrl}
-            alt="Ticket QR code"
-            className="h-48 w-48 rounded-lg border"
-          />
-        </div>
-      ) : null}
-    </div>
+    </>
   );
 }

@@ -50,7 +50,7 @@ function getStatusClasses(status: string) {
   }
 
   if (status === "Expired") {
-    return "bg-slate-200 text-slate-700";
+    return "bg-red-200 text-red-700";
   }
 
   return "bg-blue-100 text-blue-700";
@@ -169,7 +169,7 @@ export default function MyTicketsList() {
               key={ticket.id}
               className={`overflow-hidden rounded-3xl shadow-sm ring-1 transition-all duration-500 ${
                 activeHighlightId === ticket.id
-                  ? "bg-blue-50 ring-blue-400"
+                  ? "bg-blue-200 ring-blue-600"
                   : "bg-white ring-slate-200"
               }`}
             >
@@ -225,7 +225,7 @@ export default function MyTicketsList() {
                   ) : null}
 
                   {!ticket.checkInStatus && ticket.isExpired ? (
-                    <div className="mt-5 rounded-xl bg-slate-100 px-4 py-3 text-sm text-slate-700">
+                    <div className="mt-5 rounded-xl bg-red-100 px-4 py-3 text-sm text-red-700">
                       This ticket is expired.
                     </div>
                   ) : null}
