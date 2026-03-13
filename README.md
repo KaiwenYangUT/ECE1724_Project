@@ -9,13 +9,13 @@ Current status:
 - ✅ 1. app setup
 - ✅ 2. database schema
 - ✅ 3. auth + roles
-- ⏳ 4. event management
-- ⏳ 5. ticket purchase/registration
+- ✅ 4. event management
+- ✅ 5. ticket purchase/registration
 - ⏳ 6. QR generation
 - ⏳ 7. check-in logic
-- ⏳ 8. real-time dashboard
+- ✅ 8. real-time dashboard
 - ⏳ 9. cloud file storage
-- ⏳ 10. analytics/reporting
+- ✅ 10. analytics/reporting
 - ⏳ 11. extra features
 - ⏳ 12. testing + deployment
 
@@ -32,15 +32,19 @@ Current status:
 	- `POST /api/auth/login`
 - Protected route middleware with role-based checks
 
-## What Is Left To Implement (Steps 4-12)
-
 - Event CRUD management (create/update/list/details)
 - Ticket purchase/registration flow
+- Real-time organizer/staff dashboard with 
+- Analytics/reporting endpoints and UI
+
+
+## What Is Left To Implement (Steps 4-12)
+
+
 - QR code generation and ticket binding
 - Check-in workflow and validation logic
-- Real-time organizer/staff dashboard
+
 - Cloud file upload and storage for event assets
-- Analytics/reporting endpoints and UI
 - Extra features and polish
 - Full testing strategy and deployment pipeline
 
