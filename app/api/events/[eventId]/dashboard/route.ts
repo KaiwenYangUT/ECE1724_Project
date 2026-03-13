@@ -43,9 +43,9 @@ export async function GET(
     }
 
     // Only organizers can open this dashboard.
-    if (payload.role !== "ORGANIZER") {
+    if (payload.role == "ATTENDEE") {
       return NextResponse.json(
-        { error: "Only organizers can view event dashboard." },
+        { error: "Only organizers/staff can view event dashboard." },
         { status: 403 }
       );
     }
@@ -99,7 +99,12 @@ export async function GET(
     }
 
     // Organizer can only manage their own events.
-    if (event.organizerId !== payload.sub) {
+    const isOrganizer = event.organizerId === payload.sub;
+    const isAssignedStaff = event.assignedStaff.some(
+      (assignment) => assignment.user.id === payload.sub
+    );
+
+    if (!isOrganizer && !isAssignedStaff) {
       return NextResponse.json(
         { error: "You can only manage events created by your own account." },
         { status: 403 }
