@@ -55,6 +55,18 @@ export async function GET() {
             email: true,
           },
         },
+        assignedStaff: {
+        include: {
+          user: {
+            select: {
+              id: true,
+              name: true,
+              email: true,
+              role: true,
+            },
+          },
+        },
+      },
         ticketTiers: {
           include: {
             _count: {
@@ -77,6 +89,12 @@ export async function GET() {
           bannerImageUrl: event.bannerImageUrl,
           createdAt: event.createdAt,
           organizer: event.organizer,
+          assignedStaff: event.assignedStaff.map((staff) => ({
+            id: staff.user.id,
+            name: staff.user.name,
+            email: staff.user.email,
+            role: staff.user.role,
+          })),
           ticketTiers: event.ticketTiers.map((tier: (typeof event.ticketTiers)[number])=> ({
             id: tier.id,
             name: tier.name,
@@ -204,6 +222,18 @@ export async function POST(request: NextRequest) {
             email: true,
           },
         },
+        assignedStaff: {
+          include: {
+            user: {
+              select: {
+                id: true,
+                name: true,
+                email: true,
+                role: true,
+              },
+            },
+          },
+        },
         ticketTiers: {
           orderBy: { createdAt: "asc" },
         },
@@ -221,6 +251,12 @@ export async function POST(request: NextRequest) {
           location: event.location,
           bannerImageUrl: event.bannerImageUrl,
           organizer: event.organizer,
+          assignedStaff: event.assignedStaff.map((staff) => ({
+            id: staff.user.id,
+            name: staff.user.name,
+            email: staff.user.email,
+            role: staff.user.role,
+          })),
           ticketTiers: event.ticketTiers.map((tier: (typeof event.ticketTiers)[number]) => ({
             id: tier.id,
             name: tier.name,

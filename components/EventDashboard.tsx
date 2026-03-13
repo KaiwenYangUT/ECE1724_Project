@@ -27,6 +27,12 @@ type DashboardResponse = {
       name: string;
       email: string;
     };
+    assignedStaff?: {
+      id: string;
+      name: string;
+      email: string;
+      role: string;
+    }[];
   };
   stats?: {
     totalSold: number;
@@ -43,6 +49,11 @@ type DashboardResponse = {
     checkedIn: number;
     remaining: number;
   }[];
+  staffOptions?: {
+    id: string;
+    name: string;
+    email: string;
+  }[];
   error?: string;
 };
 
@@ -52,7 +63,11 @@ export default function EventDashboard({ eventId }: { eventId: string }) {
   const [data, setData] = useState<DashboardResponse | null>(null);
   const [loading, setLoading] = useState(true);
   const [pageError, setPageError] = useState("");
-
+  const [staffOptions, setStaffOptions] = useState<{ id: string; name: string; email: string }[]>([]);
+  const [selectedStaffId, setSelectedStaffId] = useState("");
+  const [assigningStaff, setAssigningStaff] = useState(false);
+  const [assignStaffMessage, setAssignStaffMessage] = useState("");
+  const [assignStaffError, setAssignStaffError] = useState("");
   useEffect(() => {
     let intervalId: NodeJS.Timeout;
 
@@ -86,6 +101,7 @@ export default function EventDashboard({ eventId }: { eventId: string }) {
         }
 
         setData(result);
+        setStaffOptions(result.staffOptions || []);
       } catch {
         setPageError("Network error. Please try again.");
       } finally {
@@ -103,6 +119,53 @@ export default function EventDashboard({ eventId }: { eventId: string }) {
 
     return () => clearInterval(intervalId);
   }, [eventId]);
+
+  
+      async function handleAssignStaff() {
+      try {
+        setAssigningStaff(true);
+        setAssignStaffMessage("");
+        setAssignStaffError("");
+
+        const token = localStorage.getItem("token");
+
+        if (!token) {
+          setAssignStaffError("Please log in first.");
+          return;
+        }
+
+        if (!selectedStaffId) {
+          setAssignStaffError("Please select a staff member.");
+          return;
+        }
+        
+        
+        const response = await fetch(`/api/events/${eventId}/dashboard`, {
+          method: "POST",
+          headers: {
+            "Content-Type": "application/json",
+            Authorization: `Bearer ${token}`,
+          },
+          body: JSON.stringify({
+            userId: selectedStaffId,
+          }),
+        });
+
+        const result = await response.json();
+
+        if (!response.ok) {
+          setAssignStaffError(result.error || "Failed to assign staff.");
+          return;
+        }
+
+        setAssignStaffMessage("Staff assigned successfully.");
+        setSelectedStaffId("");
+      } catch {
+        setAssignStaffError("Network error. Please try again.");
+      } finally {
+        setAssigningStaff(false);
+      }
+    }
 
   const overviewPieData = useMemo(() => {
     if (!data?.stats) return [];
@@ -166,7 +229,51 @@ export default function EventDashboard({ eventId }: { eventId: string }) {
           <span className="font-medium">Organizer:</span>{" "}
           {data.event.organizer.name}
         </p>
+        <p className="text-sm text-slate-700">
+          <span className="font-medium">Staff:</span>{" "}
+          {data.event.assignedStaff && data.event.assignedStaff.length > 0
+            ? data.event.assignedStaff.map((staff) => staff.name).join(", ")
+            : "No staff assigned yet"}
+        </p>
       </div>
+
+      <div className="rounded-3xl bg-white p-6 shadow-sm ring-1 ring-slate-200">
+        <h2 className="text-xl font-semibold text-slate-900">Assign Staff</h2>
+        <p className="mt-2 text-sm text-slate-600">
+          Select a staff member and assign them to this event.
+        </p>
+
+        <div className="mt-4 flex flex-col gap-3 sm:flex-row">
+          <select
+            className="w-full rounded-xl border border-slate-300 px-3 py-2 text-sm"
+            value={selectedStaffId}
+            onChange={(e) => setSelectedStaffId(e.target.value)}
+          >
+            <option value="">Select a staff member</option>
+            {staffOptions.map((staff) => (
+              <option key={staff.id} value={staff.id}>
+                {staff.name} ({staff.email})
+              </option>
+            ))}
+          </select>
+
+          <button
+            onClick={handleAssignStaff}
+            disabled={assigningStaff}
+            className="rounded-xl bg-black px-4 py-2 text-sm font-medium text-white disabled:opacity-50"
+          >
+            {assigningStaff ? "Assigning..." : "Assign Staff"}
+          </button>
+        </div>
+
+  {assignStaffMessage ? (
+    <p className="mt-3 text-sm text-green-600">{assignStaffMessage}</p>
+  ) : null}
+
+  {assignStaffError ? (
+    <p className="mt-3 text-sm text-red-600">{assignStaffError}</p>
+  ) : null}
+</div>
 
       <div className="grid gap-4 md:grid-cols-4">
         <div className="rounded-2xl bg-white p-5 shadow-sm ring-1 ring-slate-200">

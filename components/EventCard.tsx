@@ -39,7 +39,7 @@ export default function EventCard({
     currentUser?.role === "ORGANIZER" && currentUser?.id === event.organizer.id;
 
   const canManage = 
-    (currentUser?.role === "ORGANIZER" && currentUser?.id === event.organizer.id || currentUser?.role === "STAFF" && currentUser?.id === event.staff.id);
+    (currentUser?.role === "ORGANIZER" && currentUser?.id === event.organizer.id || currentUser?.role === "STAFF" && event.assignedStaff?.some((staff) => staff.id === currentUser.id));
 
   async function handleDelete() {
     const token = localStorage.getItem("token");

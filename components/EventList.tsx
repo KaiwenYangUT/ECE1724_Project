@@ -28,6 +28,12 @@ export type EventItem = {
     soldCount: number;
     remaining: number;
   }[];
+  assignedStaff?: {
+    id: string;
+    name: string;
+    email: string;
+    role: string;
+  }[];
 };
 
 type StoredUser = {
