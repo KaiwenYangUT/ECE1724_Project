@@ -11,13 +11,14 @@ Current status:
 - ✅ 3. auth + roles
 - ✅ 4. event management
 - ✅ 5. ticket purchase/registration
-- ⏳ 6. QR generation
-- ⏳ 7. check-in logic
-- ✅ 8. real-time dashboard
-- ⏳ 9. cloud file storage
-- ✅ 10. analytics/reporting
-- ⏳ 11. extra features
-- ⏳ 12. testing + deployment
+- ✅ 6. QR generation
+- ⏳ 7. QR validation
+- ⏳ 8. check-in logic
+- ✅ 9. real-time dashboard
+- ⏳ 10. cloud file storage
+- ✅ 11. analytics/reporting
+- ⏳ 12. extra features
+- ⏳ 13. testing + deployment
 
 ## What Is Already Implemented (Steps 1-3)
 
