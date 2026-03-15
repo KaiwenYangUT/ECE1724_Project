@@ -115,6 +115,9 @@ export default function RegisterForm() {
           placeholder="Enter your email"
           required
         />
+        <p className="mt-1 text-sm text-slate-500">
+          Use a valid email address. This will be your login ID.
+        </p>
       </div>
 
       <div>
@@ -127,6 +130,9 @@ export default function RegisterForm() {
           placeholder="Enter your password"
           required
         />
+        <p className="mt-1 text-sm text-slate-500">
+          Password must be at least 6 characters long.
+        </p>
       </div>
 
       <div>
@@ -142,6 +148,10 @@ export default function RegisterForm() {
           <option value="STAFF">Staff</option>
           <option value="ORGANIZER">Organizer</option>
         </select>
+        <p className="mt-1 text-sm text-slate-500">
+          Choose `Organizer` to create and manage events, `Staff` to help run assigned
+          events, or `Attendee` to browse and purchase tickets.
+        </p>
       </div>
 
       <button
