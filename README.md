@@ -30,6 +30,7 @@ Current status:
 	- JWT generation/verification
 	- registration confirmation email support via Resend
 - Ticket purchase confirmation email support via Resend
+- PDF ticket generation for download and email attachments
 - Auth APIs:
 	- `POST /api/auth/register`
 	- `POST /api/auth/login`

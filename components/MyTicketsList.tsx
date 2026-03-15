@@ -65,6 +65,8 @@ export default function MyTicketsList() {
   const [loading, setLoading] = useState(true);
   const [pageError, setPageError] = useState("");
   const [activeHighlightId, setActiveHighlightId] = useState("");
+  const [downloadingTicketId, setDownloadingTicketId] = useState("");
+  const [downloadError, setDownloadError] = useState("");
 
   useEffect(() => {
     async function loadMyTickets() {
@@ -130,6 +132,52 @@ export default function MyTicketsList() {
     }
   }, [highlightId, tickets]);
 
+  async function handleDownloadPdf(ticketId: string, eventTitle: string) {
+    try {
+      setDownloadingTicketId(ticketId);
+      setDownloadError("");
+
+      const token = localStorage.getItem("token");
+
+      if (!token) {
+        setDownloadError("Please log in first to download your ticket PDF.");
+        return;
+      }
+
+      const response = await fetch(`/api/tickets/${ticketId}/pdf`, {
+        method: "GET",
+        headers: {
+          Authorization: `Bearer ${token}`,
+        },
+      });
+
+      if (!response.ok) {
+        const data = await response.json().catch(() => null);
+        setDownloadError(data?.error || "Failed to download the ticket PDF.");
+        return;
+      }
+
+      const blob = await response.blob();
+      const blobUrl = window.URL.createObjectURL(blob);
+      const link = document.createElement("a");
+      const safeEventTitle = eventTitle
+        .toLowerCase()
+        .replace(/[^a-z0-9]+/g, "-")
+        .replace(/^-+|-+$/g, "");
+
+      link.href = blobUrl;
+      link.download = `${safeEventTitle || "ticket"}-${ticketId}.pdf`;
+      document.body.appendChild(link);
+      link.click();
+      link.remove();
+      window.URL.revokeObjectURL(blobUrl);
+    } catch {
+      setDownloadError("Network error. Please try again.");
+    } finally {
+      setDownloadingTicketId("");
+    }
+  }
+
   if (loading) {
     return (
       <div className="rounded-2xl border bg-white p-6 shadow-sm">
@@ -155,6 +203,9 @@ export default function MyTicketsList() {
         <p className="mt-2 text-slate-600">
           Purchased tickets, event information, QR codes, and current ticket status.
         </p>
+        {downloadError ? (
+          <p className="mt-3 text-sm text-red-600">{downloadError}</p>
+        ) : null}
       </div>
 
       {tickets.length === 0 ? (
@@ -235,6 +286,19 @@ export default function MyTicketsList() {
                       This ticket is valid for check-in.
                     </div>
                   ) : null}
+
+                  <div className="mt-5">
+                    <button
+                      type="button"
+                      onClick={() => handleDownloadPdf(ticket.id, ticket.event.title)}
+                      disabled={downloadingTicketId === ticket.id}
+                      className="rounded-xl border border-slate-300 bg-white px-4 py-2 text-sm font-medium text-slate-700 transition hover:bg-slate-100 disabled:opacity-50"
+                    >
+                      {downloadingTicketId === ticket.id
+                        ? "Preparing PDF..."
+                        : "Download PDF Ticket"}
+                    </button>
+                  </div>
                 </div>
 
                 <div className="border-t bg-slate-50 p-6 lg:border-l lg:border-t-0">

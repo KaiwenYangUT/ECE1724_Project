@@ -6,6 +6,7 @@ import { z } from "zod";
 import prisma from "@/lib/prisma";
 import { verifyToken } from "@/lib/auth/jwt";
 import { sendTicketPurchaseConfirmationEmail } from "@/lib/email";
+import { createTicketPdfFilename, generateTicketPdf } from "@/lib/tickets/pdf";
 import { encodeTicketQrPayload } from "@/lib/tickets/qr";
 
 function extractToken(request: NextRequest): string | null {
@@ -150,8 +151,14 @@ export async function POST(request: NextRequest) {
             select: {
               id: true,
               title: true,
+              description: true,
               dateTime: true,
               location: true,
+              organizer: {
+                select: {
+                  name: true,
+                },
+              },
             },
           },
           ticketTier: {
@@ -163,6 +170,32 @@ export async function POST(request: NextRequest) {
           },
         },
       });
+    });
+
+    const ticketPdfBytes = await generateTicketPdf({
+      attendee: {
+        name: user.name,
+        email: user.email,
+      },
+      event: {
+        title: purchasedTicket.event.title,
+        description: purchasedTicket.event.description,
+        dateTime: purchasedTicket.event.dateTime,
+        location: purchasedTicket.event.location,
+        organizerName: purchasedTicket.event.organizer.name,
+      },
+      ticketTier: {
+        name: purchasedTicket.ticketTier.name,
+        price: Number(purchasedTicket.ticketTier.price),
+      },
+      ticket: {
+        id: purchasedTicket.id,
+        qrCodeToken: purchasedTicket.qrCodeToken,
+        qrCodeDataUrl: purchasedTicket.qrCodeDataUrl,
+        createdAt: purchasedTicket.createdAt,
+        checkInStatus: purchasedTicket.checkInStatus,
+        checkInTime: purchasedTicket.checkInTime,
+      },
     });
 
     try {
@@ -183,6 +216,10 @@ export async function POST(request: NextRequest) {
           qrCodeToken: purchasedTicket.qrCodeToken,
           qrCodeDataUrl: purchasedTicket.qrCodeDataUrl,
           createdAt: purchasedTicket.createdAt,
+        },
+        pdfAttachment: {
+          filename: createTicketPdfFilename(purchasedTicket.event.title, purchasedTicket.id),
+          content: ticketPdfBytes,
         },
       });
     } catch (error) {

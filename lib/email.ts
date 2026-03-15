@@ -22,6 +22,10 @@ type TicketPurchaseConfirmationEmailInput = {
     qrCodeDataUrl: string | null;
     createdAt: Date;
   };
+  pdfAttachment?: {
+    filename: string;
+    content: Uint8Array;
+  };
 };
 
 function getEmailConfig() {
@@ -37,11 +41,16 @@ async function sendTransactionalEmail({
   subject,
   html,
   missingConfigMessage,
+  attachments,
 }: {
   to: string;
   subject: string;
   html: string;
   missingConfigMessage: string;
+  attachments?: {
+    filename: string;
+    content: Uint8Array;
+  }[];
 }) {
   const config = getEmailConfig();
 
@@ -61,6 +70,10 @@ async function sendTransactionalEmail({
       to: [to],
       subject,
       html,
+      attachments: attachments?.map((attachment) => ({
+        filename: attachment.filename,
+        content: Buffer.from(attachment.content).toString("base64"),
+      })),
     }),
   });
 
@@ -150,14 +163,7 @@ function buildTicketPurchaseConfirmationHtml({
       <p><strong>Price:</strong> ${formattedPrice}</p>
       <p><strong>Purchased:</strong> ${formattedPurchaseTime}</p>
       <p><strong>Ticket Token:</strong> ${ticket.qrCodeToken}</p>
-      ${
-        ticket.qrCodeDataUrl
-          ? `<div style="margin-top: 16px;">
-              <p style="margin-bottom: 8px;"><strong>Your QR Code:</strong></p>
-              <img src="${ticket.qrCodeDataUrl}" alt="Ticket QR Code" style="width: 220px; height: 220px; border: 1px solid #cbd5e1; border-radius: 12px; padding: 8px; background: #ffffff;" />
-            </div>`
-          : ""
-      }
+      <p><strong>Your QR Code:</strong> In the attached PDF ticket or access it in the app.</p>
       <p style="margin-top: 16px;">Please keep this email or open the app to access your ticket at check-in.</p>
     </div>
   `;
@@ -169,6 +175,7 @@ export async function sendTicketPurchaseConfirmationEmail({
   event,
   ticketTier,
   ticket,
+  pdfAttachment,
 }: TicketPurchaseConfirmationEmailInput) {
   return sendTransactionalEmail({
     to: email,
@@ -181,5 +188,6 @@ export async function sendTicketPurchaseConfirmationEmail({
     }),
     missingConfigMessage:
       "Ticket purchase confirmation email skipped because RESEND_API_KEY or EMAIL_FROM is missing.",
+    attachments: pdfAttachment ? [pdfAttachment] : undefined,
   });
 }
