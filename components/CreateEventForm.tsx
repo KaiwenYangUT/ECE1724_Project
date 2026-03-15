@@ -2,6 +2,7 @@
 
 import * as React from "react";
 import { useState } from "react";
+import { useRouter } from "next/navigation";
 
 type TicketTierInput = {
   name: string;
@@ -16,6 +17,7 @@ const emptyTier = (): TicketTierInput => ({
 });
 
 export default function CreateEventForm() {
+  const router = useRouter();
   const [title, setTitle] = useState("");
   const [description, setDescription] = useState("");
   const [dateTime, setDateTime] = useState("");
@@ -101,8 +103,13 @@ export default function CreateEventForm() {
         return;
       }
 
-      setSuccessMessage("Event created successfully.");
+      setSuccessMessage("Event created successfully. Returning to the home page in 3 seconds...");
       resetForm();
+
+      setTimeout(() => {
+        router.push("/");
+        router.refresh();
+      }, 3000);
     } catch {
       setErrorMessage("Network error. Please try again.");
     } finally {
