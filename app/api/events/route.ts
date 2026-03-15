@@ -267,7 +267,8 @@ export async function POST(request: NextRequest) {
       },
       { status: 201 },
     );
-  } catch {
+  } catch (error) {
+    console.error("Create event error:", error);
     return NextResponse.json(
       { error: "Failed to create event. Please try again later." },
       { status: 500 },

@@ -1,18 +1,18 @@
 "use client";
 
-import { useEffect, useMemo, useState } from "react";
+import { useCallback, useEffect, useMemo, useState } from "react";
 import {
-  BarChart,
   Bar,
-  PieChart,
-  Pie,
+  BarChart,
+  CartesianGrid,
   Cell,
+  Legend,
+  Pie,
+  PieChart,
+  ResponsiveContainer,
+  Tooltip,
   XAxis,
   YAxis,
-  CartesianGrid,
-  Tooltip,
-  Legend,
-  ResponsiveContainer,
 } from "recharts";
 
 type DashboardResponse = {
@@ -49,12 +49,50 @@ type DashboardResponse = {
     checkedIn: number;
     remaining: number;
   }[];
+  recentCheckIns?: {
+    id: string;
+    qrCodeToken: string;
+    checkInTime: string | null;
+    attendee: {
+      id: string;
+      name: string;
+      email: string;
+    };
+    ticketTier: {
+      id: string;
+      name: string;
+    };
+  }[];
   staffOptions?: {
     id: string;
     name: string;
     email: string;
   }[];
+  permissions?: {
+    canAssignStaff: boolean;
+    canCheckInTickets: boolean;
+  };
   error?: string;
+};
+
+type CheckInResponse = {
+  message?: string;
+  error?: string;
+  ticket?: {
+    id: string;
+    qrCodeToken?: string;
+    checkInStatus: boolean;
+    checkInTime: string | null;
+    attendee: {
+      id: string;
+      name: string;
+      email: string;
+    };
+    ticketTier: {
+      id: string;
+      name: string;
+    };
+  };
 };
 
 const PIE_COLORS = ["#16a34a", "#94a3b8"];
@@ -63,15 +101,23 @@ export default function EventDashboard({ eventId }: { eventId: string }) {
   const [data, setData] = useState<DashboardResponse | null>(null);
   const [loading, setLoading] = useState(true);
   const [pageError, setPageError] = useState("");
-  const [staffOptions, setStaffOptions] = useState<{ id: string; name: string; email: string }[]>([]);
+  const [staffOptions, setStaffOptions] = useState<
+    { id: string; name: string; email: string }[]
+  >([]);
   const [selectedStaffId, setSelectedStaffId] = useState("");
   const [assigningStaff, setAssigningStaff] = useState(false);
   const [assignStaffMessage, setAssignStaffMessage] = useState("");
   const [assignStaffError, setAssignStaffError] = useState("");
-  useEffect(() => {
-    let intervalId: NodeJS.Timeout;
+  const [ticketToken, setTicketToken] = useState("");
+  const [isCheckingIn, setIsCheckingIn] = useState(false);
+  const [checkInMessage, setCheckInMessage] = useState("");
+  const [checkInError, setCheckInError] = useState("");
+  const [checkedInTicket, setCheckedInTicket] = useState<CheckInResponse["ticket"] | null>(
+    null,
+  );
 
-    async function loadDashboard(isInitialLoad = false) {
+  const loadDashboard = useCallback(
+    async (isInitialLoad = false) => {
       try {
         if (isInitialLoad) {
           setLoading(true);
@@ -109,63 +155,116 @@ export default function EventDashboard({ eventId }: { eventId: string }) {
           setLoading(false);
         }
       }
-    }
+    },
+    [eventId],
+  );
 
+  useEffect(() => {
     void loadDashboard(true);
 
-    intervalId = setInterval(() => {
+    const intervalId = setInterval(() => {
       void loadDashboard(false);
     }, 5000);
 
     return () => clearInterval(intervalId);
-  }, [eventId]);
+  }, [eventId, loadDashboard]);
 
-  
-      async function handleAssignStaff() {
-      try {
-        setAssigningStaff(true);
-        setAssignStaffMessage("");
-        setAssignStaffError("");
+  async function handleAssignStaff() {
+    try {
+      setAssigningStaff(true);
+      setAssignStaffMessage("");
+      setAssignStaffError("");
 
-        const token = localStorage.getItem("token");
+      const token = localStorage.getItem("token");
 
-        if (!token) {
-          setAssignStaffError("Please log in first.");
-          return;
-        }
-
-        if (!selectedStaffId) {
-          setAssignStaffError("Please select a staff member.");
-          return;
-        }
-        
-        
-        const response = await fetch(`/api/events/${eventId}/dashboard`, {
-          method: "POST",
-          headers: {
-            "Content-Type": "application/json",
-            Authorization: `Bearer ${token}`,
-          },
-          body: JSON.stringify({
-            userId: selectedStaffId,
-          }),
-        });
-
-        const result = await response.json();
-
-        if (!response.ok) {
-          setAssignStaffError(result.error || "Failed to assign staff.");
-          return;
-        }
-
-        setAssignStaffMessage("Staff assigned successfully.");
-        setSelectedStaffId("");
-      } catch {
-        setAssignStaffError("Network error. Please try again.");
-      } finally {
-        setAssigningStaff(false);
+      if (!token) {
+        setAssignStaffError("Please log in first.");
+        return;
       }
+
+      if (!selectedStaffId) {
+        setAssignStaffError("Please select a staff member.");
+        return;
+      }
+
+      const response = await fetch(`/api/events/${eventId}/dashboard`, {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+          Authorization: `Bearer ${token}`,
+        },
+        body: JSON.stringify({
+          userId: selectedStaffId,
+        }),
+      });
+
+      const result = await response.json();
+
+      if (!response.ok) {
+        setAssignStaffError(result.error || "Failed to assign staff.");
+        return;
+      }
+
+      setAssignStaffMessage("Staff assigned successfully.");
+      setSelectedStaffId("");
+      await loadDashboard(false);
+    } catch {
+      setAssignStaffError("Network error. Please try again.");
+    } finally {
+      setAssigningStaff(false);
     }
+  }
+
+  async function handleCheckIn() {
+    try {
+      setIsCheckingIn(true);
+      setCheckInMessage("");
+      setCheckInError("");
+      setCheckedInTicket(null);
+
+      const token = localStorage.getItem("token");
+
+      if (!token) {
+        setCheckInError("Please log in first.");
+        return;
+      }
+
+      if (!ticketToken.trim()) {
+        setCheckInError("Please enter a ticket token.");
+        return;
+      }
+
+      const response = await fetch(`/api/events/${eventId}/dashboard`, {
+        method: "PATCH",
+        headers: {
+          "Content-Type": "application/json",
+          Authorization: `Bearer ${token}`,
+        },
+        body: JSON.stringify({
+          qrCodeToken: ticketToken.trim(),
+        }),
+      });
+
+      const result: CheckInResponse = await response.json();
+
+      if (!response.ok) {
+        setCheckInError(result.error || "Failed to validate ticket.");
+        if (result.ticket) {
+          setCheckedInTicket(result.ticket);
+        }
+        return;
+      }
+
+      setCheckInMessage(result.message || "Ticket checked in successfully.");
+      setCheckedInTicket(result.ticket || null);
+      setTicketToken("");
+      await loadDashboard(false);
+    } catch {
+      setCheckInError("Network error. Please try again.");
+    } finally {
+      setIsCheckingIn(false);
+    }
+  }
 
   const overviewPieData = useMemo(() => {
     if (!data?.stats) return [];
@@ -214,9 +313,7 @@ export default function EventDashboard({ eventId }: { eventId: string }) {
   return (
     <div className="space-y-6">
       <div className="rounded-3xl bg-white p-6 shadow-sm ring-1 ring-slate-200">
-        <h1 className="text-3xl font-bold text-slate-900">
-          {data.event.title}
-        </h1>
+        <h1 className="text-3xl font-bold text-slate-900">{data.event.title}</h1>
         <p className="mt-2 text-slate-600">{data.event.description}</p>
         <p className="mt-4 text-sm text-slate-700">
           <span className="font-medium">Date:</span>{" "}
@@ -226,8 +323,7 @@ export default function EventDashboard({ eventId }: { eventId: string }) {
           <span className="font-medium">Location:</span> {data.event.location}
         </p>
         <p className="text-sm text-slate-700">
-          <span className="font-medium">Organizer:</span>{" "}
-          {data.event.organizer.name}
+          <span className="font-medium">Organizer:</span> {data.event.organizer.name}
         </p>
         <p className="text-sm text-slate-700">
           <span className="font-medium">Staff:</span>{" "}
@@ -237,43 +333,142 @@ export default function EventDashboard({ eventId }: { eventId: string }) {
         </p>
       </div>
 
-      <div className="rounded-3xl bg-white p-6 shadow-sm ring-1 ring-slate-200">
-        <h2 className="text-xl font-semibold text-slate-900">Assign Staff</h2>
-        <p className="mt-2 text-sm text-slate-600">
-          Select a staff member and assign them to this event.
-        </p>
+      <div className="grid gap-6 xl:grid-cols-[1.2fr_0.8fr]">
+        <div className="rounded-3xl bg-white p-6 shadow-sm ring-1 ring-slate-200">
+          <h2 className="text-xl font-semibold text-slate-900">Validate Ticket</h2>
+          <p className="mt-2 text-sm text-slate-600">
+            Enter the QR/token value to verify the ticket belongs to this event and
+            check the attendee in.
+          </p>
 
-        <div className="mt-4 flex flex-col gap-3 sm:flex-row">
-          <select
-            className="w-full rounded-xl border border-slate-300 px-3 py-2 text-sm"
-            value={selectedStaffId}
-            onChange={(e) => setSelectedStaffId(e.target.value)}
-          >
-            <option value="">Select a staff member</option>
-            {staffOptions.map((staff) => (
-              <option key={staff.id} value={staff.id}>
-                {staff.name} ({staff.email})
-              </option>
-            ))}
-          </select>
+          <div className="mt-4 flex flex-col gap-3 sm:flex-row">
+            <input
+              type="text"
+              value={ticketToken}
+              onChange={(event) => setTicketToken(event.target.value)}
+              placeholder="Paste ticket token"
+              className="w-full rounded-xl border border-slate-300 px-3 py-2 text-sm"
+            />
+            <button
+              onClick={handleCheckIn}
+              disabled={isCheckingIn}
+              className="rounded-xl bg-emerald-600 px-4 py-2 text-sm font-medium text-white disabled:opacity-50"
+            >
+              {isCheckingIn ? "Checking..." : "Validate & Check In"}
+            </button>
+          </div>
 
-          <button
-            onClick={handleAssignStaff}
-            disabled={assigningStaff}
-            className="rounded-xl bg-black px-4 py-2 text-sm font-medium text-white disabled:opacity-50"
-          >
-            {assigningStaff ? "Assigning..." : "Assign Staff"}
-          </button>
+          {checkInMessage ? (
+            <p className="mt-3 text-sm text-emerald-600">{checkInMessage}</p>
+          ) : null}
+
+          {checkInError ? (
+            <p className="mt-3 text-sm text-red-600">{checkInError}</p>
+          ) : null}
+
+          {checkedInTicket ? (
+            <div className="mt-4 rounded-2xl border border-slate-200 bg-slate-50 p-4 text-sm text-slate-700">
+              <p>
+                <span className="font-semibold text-slate-900">Attendee:</span>{" "}
+                {checkedInTicket.attendee.name} ({checkedInTicket.attendee.email})
+              </p>
+              <p className="mt-1">
+                <span className="font-semibold text-slate-900">Ticket Tier:</span>{" "}
+                {checkedInTicket.ticketTier.name}
+              </p>
+              <p className="mt-1">
+                <span className="font-semibold text-slate-900">Status:</span>{" "}
+                {checkedInTicket.checkInStatus ? "Checked In" : "Not Checked In"}
+              </p>
+              {checkedInTicket.checkInTime ? (
+                <p className="mt-1">
+                  <span className="font-semibold text-slate-900">Check-in Time:</span>{" "}
+                  {new Date(checkedInTicket.checkInTime).toLocaleString()}
+                </p>
+              ) : null}
+            </div>
+          ) : null}
         </div>
 
-  {assignStaffMessage ? (
-    <p className="mt-3 text-sm text-green-600">{assignStaffMessage}</p>
-  ) : null}
+        <div className="rounded-3xl bg-white p-6 shadow-sm ring-1 ring-slate-200">
+          <h2 className="text-xl font-semibold text-slate-900">Recent Check-ins</h2>
+          <p className="mt-2 text-sm text-slate-600">
+            Latest validated tickets. This panel refreshes automatically.
+          </p>
 
-  {assignStaffError ? (
-    <p className="mt-3 text-sm text-red-600">{assignStaffError}</p>
-  ) : null}
-</div>
+          <div className="mt-4 space-y-3">
+            {data.recentCheckIns && data.recentCheckIns.length > 0 ? (
+              data.recentCheckIns.map((ticket) => (
+                <div
+                  key={ticket.id}
+                  className="rounded-2xl border border-slate-200 bg-slate-50 p-4"
+                >
+                  <p className="text-sm font-semibold text-slate-900">
+                    {ticket.attendee.name}
+                  </p>
+                  <p className="text-sm text-slate-600">{ticket.attendee.email}</p>
+                  <p className="mt-1 text-sm text-slate-700">
+                    Tier: {ticket.ticketTier.name}
+                  </p>
+                  <p className="text-xs text-slate-500">
+                    Token: {ticket.qrCodeToken}
+                  </p>
+                  <p className="mt-1 text-xs text-slate-500">
+                    Checked in{" "}
+                    {ticket.checkInTime
+                      ? new Date(ticket.checkInTime).toLocaleString()
+                      : "just now"}
+                  </p>
+                </div>
+              ))
+            ) : (
+              <div className="rounded-2xl border border-dashed border-slate-300 bg-slate-50 p-4 text-sm text-slate-500">
+                No tickets have been checked in yet.
+              </div>
+            )}
+          </div>
+        </div>
+      </div>
+
+      {data.permissions?.canAssignStaff ? (
+        <div className="rounded-3xl bg-white p-6 shadow-sm ring-1 ring-slate-200">
+          <h2 className="text-xl font-semibold text-slate-900">Assign Staff</h2>
+          <p className="mt-2 text-sm text-slate-600">
+            Select a staff member and assign them to this event.
+          </p>
+
+          <div className="mt-4 flex flex-col gap-3 sm:flex-row">
+            <select
+              className="w-full rounded-xl border border-slate-300 px-3 py-2 text-sm"
+              value={selectedStaffId}
+              onChange={(event) => setSelectedStaffId(event.target.value)}
+            >
+              <option value="">Select a staff member</option>
+              {staffOptions.map((staff) => (
+                <option key={staff.id} value={staff.id}>
+                  {staff.name} ({staff.email})
+                </option>
+              ))}
+            </select>
+
+            <button
+              onClick={handleAssignStaff}
+              disabled={assigningStaff}
+              className="rounded-xl bg-black px-4 py-2 text-sm font-medium text-white disabled:opacity-50"
+            >
+              {assigningStaff ? "Assigning..." : "Assign Staff"}
+            </button>
+          </div>
+
+          {assignStaffMessage ? (
+            <p className="mt-3 text-sm text-green-600">{assignStaffMessage}</p>
+          ) : null}
+
+          {assignStaffError ? (
+            <p className="mt-3 text-sm text-red-600">{assignStaffError}</p>
+          ) : null}
+        </div>
+      ) : null}
 
       <div className="grid gap-4 md:grid-cols-4">
         <div className="rounded-2xl bg-white p-5 shadow-sm ring-1 ring-slate-200">
@@ -304,7 +499,8 @@ export default function EventDashboard({ eventId }: { eventId: string }) {
           </p>
         </div>
       </div>
-       <div className="rounded-3xl bg-white p-6 shadow-sm ring-1 ring-slate-200">
+
+      <div className="rounded-3xl bg-white p-6 shadow-sm ring-1 ring-slate-200">
         <h2 className="text-2xl font-semibold text-slate-900">
           Ticket Tier Statistics
         </h2>
@@ -336,11 +532,10 @@ export default function EventDashboard({ eventId }: { eventId: string }) {
           </table>
         </div>
       </div>
+
       <div className="grid gap-6 lg:grid-cols-2">
         <div className="rounded-3xl bg-white p-6 shadow-sm ring-1 ring-slate-200">
-          <h2 className="text-xl font-semibold text-slate-900">
-            Check-in Overview
-          </h2>
+          <h2 className="text-xl font-semibold text-slate-900">Check-in Overview</h2>
           <p className="mt-2 text-sm text-slate-600">
             Overall checked-in versus not checked-in tickets.
           </p>
@@ -372,9 +567,7 @@ export default function EventDashboard({ eventId }: { eventId: string }) {
         </div>
 
         <div className="rounded-3xl bg-white p-6 shadow-sm ring-1 ring-slate-200">
-          <h2 className="text-xl font-semibold text-slate-900">
-            Tier Capacity Summary
-          </h2>
+          <h2 className="text-xl font-semibold text-slate-900">Tier Capacity Summary</h2>
           <p className="mt-2 text-sm text-slate-600">
             Compare sold, checked-in, and remaining tickets by tier.
           </p>
