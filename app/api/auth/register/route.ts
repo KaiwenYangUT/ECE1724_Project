@@ -4,6 +4,7 @@ import { z } from "zod";
 
 import prisma from "@/lib/prisma";
 import { hashPassword } from "@/lib/auth/hash";
+import { sendRegistrationConfirmationEmail } from "@/lib/email";
 
 const registerSchema = z.object({
   name: z.string().trim().min(1, "Name is required"),
@@ -58,6 +59,16 @@ export async function POST(request: Request) {
         createdAt: true,
       },
     });
+
+    try {
+      await sendRegistrationConfirmationEmail({
+        name: user.name,
+        email: user.email,
+        role: user.role,
+      });
+    } catch (error) {
+      console.error("Registration confirmation email failed:", error);
+    }
 
     return NextResponse.json({ message: "User registered", user }, { status: 201 });
   } catch {

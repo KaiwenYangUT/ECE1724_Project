@@ -28,6 +28,7 @@ Current status:
 - Authentication utilities:
 	- password hashing/verification
 	- JWT generation/verification
+	- registration confirmation email support via Resend
 - Auth APIs:
 	- `POST /api/auth/register`
 	- `POST /api/auth/login`
@@ -62,6 +63,9 @@ npm install
 ```env
 DATABASE_URL="postgresql://postgres:password@localhost:5432/event_ticketing"
 JWT_SECRET="change-this-in-production"
+RESEND_API_KEY="re_..."
+EMAIL_FROM="Event Ticketing <onboarding@resend.dev>"
+APP_BASE_URL="http://localhost:3000"
 ```
 
 3. Run migrations
