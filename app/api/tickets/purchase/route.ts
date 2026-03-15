@@ -5,6 +5,7 @@ import { z } from "zod";
 
 import prisma from "@/lib/prisma";
 import { verifyToken } from "@/lib/auth/jwt";
+import { sendTicketPurchaseConfirmationEmail } from "@/lib/email";
 import { encodeTicketQrPayload } from "@/lib/tickets/qr";
 
 function extractToken(request: NextRequest): string | null {
@@ -61,6 +62,8 @@ export async function POST(request: NextRequest) {
       where: { id: payload.sub },
       select: {
         id: true,
+        name: true,
+        email: true,
         role: true,
       },
     });
@@ -161,6 +164,30 @@ export async function POST(request: NextRequest) {
         },
       });
     });
+
+    try {
+      await sendTicketPurchaseConfirmationEmail({
+        name: user.name,
+        email: user.email,
+        event: {
+          title: purchasedTicket.event.title,
+          dateTime: purchasedTicket.event.dateTime,
+          location: purchasedTicket.event.location,
+        },
+        ticketTier: {
+          name: purchasedTicket.ticketTier.name,
+          price: Number(purchasedTicket.ticketTier.price),
+        },
+        ticket: {
+          id: purchasedTicket.id,
+          qrCodeToken: purchasedTicket.qrCodeToken,
+          qrCodeDataUrl: purchasedTicket.qrCodeDataUrl,
+          createdAt: purchasedTicket.createdAt,
+        },
+      });
+    } catch (error) {
+      console.error("Ticket purchase confirmation email failed:", error);
+    }
 
     return NextResponse.json(
       {

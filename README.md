@@ -29,6 +29,7 @@ Current status:
 	- password hashing/verification
 	- JWT generation/verification
 	- registration confirmation email support via Resend
+- Ticket purchase confirmation email support via Resend
 - Auth APIs:
 	- `POST /api/auth/register`
 	- `POST /api/auth/login`
