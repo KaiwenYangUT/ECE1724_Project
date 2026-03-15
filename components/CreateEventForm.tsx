@@ -10,11 +10,114 @@ type TicketTierInput = {
   quantityLimit: string;
 };
 
+type TicketTierError = {
+  name: string;
+  price: string;
+  quantityLimit: string;
+};
+
+type CreateEventResponse = {
+  message?: string;
+  error?: string;
+  details?: {
+    formErrors?: string[];
+    fieldErrors?: {
+      title?: string[];
+      description?: string[];
+      dateTime?: string[];
+      location?: string[];
+      bannerImageUrl?: string[];
+      ticketTiers?: string[];
+    };
+  };
+};
+
 const emptyTier = (): TicketTierInput => ({
   name: "",
   price: "",
   quantityLimit: "",
 });
+
+const emptyTierError = (): TicketTierError => ({
+  name: "",
+  price: "",
+  quantityLimit: "",
+});
+
+function validateTitle(value: string) {
+  return value.trim() ? "" : "Title is required.";
+}
+
+function validateDescription(value: string) {
+  return value.trim() ? "" : "Description is required.";
+}
+
+function validateDateTime(value: string) {
+  if (!value.trim()) {
+    return "Date and time are required.";
+  }
+
+  const parsedDate = new Date(value);
+
+  if (Number.isNaN(parsedDate.getTime())) {
+    return "The event date and time format is invalid.";
+  }
+
+  if (parsedDate.getTime() <= Date.now()) {
+    return "The event date and time must be in the future.";
+  }
+
+  return "";
+}
+
+function validateLocation(value: string) {
+  return value.trim() ? "" : "Location is required.";
+}
+
+function validateBannerImageUrl(value: string) {
+  if (!value.trim()) {
+    return "";
+  }
+
+  try {
+    new URL(value.trim());
+    return "";
+  } catch {
+    return "Banner image URL must be valid.";
+  }
+}
+
+function validateTierName(value: string) {
+  return value.trim() ? "" : "Ticket tier name is required.";
+}
+
+function validateTierPrice(value: string) {
+  if (!value.trim()) {
+    return "Price is required.";
+  }
+
+  const parsedPrice = Number(value);
+
+  if (Number.isNaN(parsedPrice)) {
+    return "Price must be a number.";
+  }
+
+  return parsedPrice >= 0 ? "" : "Price cannot be negative.";
+}
+
+function validateTierQuantityLimit(value: string) {
+  if (!value.trim()) {
+    return "Quantity limit is required.";
+  }
+
+  const parsedQuantity = Number(value);
+
+  if (!Number.isInteger(parsedQuantity)) {
+    return "Quantity must be a whole number.";
+  }
+
+  return parsedQuantity >= 1 ? "" : "Quantity must be at least 1.";
+}
 
 export default function CreateEventForm() {
   const router = useRouter();
@@ -27,23 +130,121 @@ export default function CreateEventForm() {
   const [loading, setLoading] = useState(false);
   const [successMessage, setSuccessMessage] = useState("");
   const [errorMessage, setErrorMessage] = useState("");
+  const [titleError, setTitleError] = useState("");
+  const [descriptionError, setDescriptionError] = useState("");
+  const [dateTimeError, setDateTimeError] = useState("");
+  const [locationError, setLocationError] = useState("");
+  const [bannerImageUrlError, setBannerImageUrlError] = useState("");
+  const [ticketTierErrors, setTicketTierErrors] = useState<TicketTierError[]>([emptyTierError()]);
+
+  function clearFormErrorIfResolved(nextFormErrors: {
+    title: string;
+    description: string;
+    dateTime: string;
+    location: string;
+    bannerImageUrl: string;
+    ticketTierErrors: TicketTierError[];
+  }) {
+    const hasTierError = nextFormErrors.ticketTierErrors.some(
+      (tierError) => tierError.name || tierError.price || tierError.quantityLimit,
+    );
+
+    const hasAnyError =
+      Boolean(nextFormErrors.title) ||
+      Boolean(nextFormErrors.description) ||
+      Boolean(nextFormErrors.dateTime) ||
+      Boolean(nextFormErrors.location) ||
+      Boolean(nextFormErrors.bannerImageUrl) ||
+      hasTierError;
+
+    if (!hasAnyError && errorMessage === "Please fix the highlighted fields.") {
+      setErrorMessage("");
+    }
+  }
+
+  function validateAllFields() {
+    const nextTitleError = validateTitle(title);
+    const nextDescriptionError = validateDescription(description);
+    const nextDateTimeError = validateDateTime(dateTime);
+    const nextLocationError = validateLocation(location);
+    const nextBannerImageUrlError = validateBannerImageUrl(bannerImageUrl);
+    const nextTierErrors = ticketTiers.map((tier) => ({
+      name: validateTierName(tier.name),
+      price: validateTierPrice(tier.price),
+      quantityLimit: validateTierQuantityLimit(tier.quantityLimit),
+    }));
+
+    setTitleError(nextTitleError);
+    setDescriptionError(nextDescriptionError);
+    setDateTimeError(nextDateTimeError);
+    setLocationError(nextLocationError);
+    setBannerImageUrlError(nextBannerImageUrlError);
+    setTicketTierErrors(nextTierErrors);
+
+    return (
+      !nextTitleError &&
+      !nextDescriptionError &&
+      !nextDateTimeError &&
+      !nextLocationError &&
+      !nextBannerImageUrlError &&
+      nextTierErrors.every(
+        (tierError) => !tierError.name && !tierError.price && !tierError.quantityLimit,
+      )
+    );
+  }
 
   function updateTier(index: number, field: keyof TicketTierInput, value: string) {
-    setTicketTiers((prev) =>
-      prev.map((tier, i) => (i === index ? { ...tier, [field]: value } : tier)),
+    const nextTicketTiers = ticketTiers.map((tier, i) =>
+      i === index ? { ...tier, [field]: value } : tier,
     );
+    const nextTierErrors = ticketTierErrors.map((tierError, i) => {
+      if (i !== index) {
+        return tierError;
+      }
+
+      const updatedTier = nextTicketTiers[index];
+
+      return {
+        name: validateTierName(updatedTier.name),
+        price: validateTierPrice(updatedTier.price),
+        quantityLimit: validateTierQuantityLimit(updatedTier.quantityLimit),
+      };
+    });
+
+    setTicketTiers(nextTicketTiers);
+    setTicketTierErrors(nextTierErrors);
+    clearFormErrorIfResolved({
+      title: titleError,
+      description: descriptionError,
+      dateTime: dateTimeError,
+      location: locationError,
+      bannerImageUrl: bannerImageUrlError,
+      ticketTierErrors: nextTierErrors,
+    });
   }
 
   function addTier() {
     setTicketTiers((prev) => [...prev, emptyTier()]);
+    setTicketTierErrors((prev) => [...prev, emptyTierError()]);
   }
 
   function removeTier(index: number) {
-    setTicketTiers((prev) => {
-      if (prev.length === 1) {
-        return prev;
-      }
-      return prev.filter((_, i) => i !== index);
+    if (ticketTiers.length === 1) {
+      return;
+    }
+
+    const nextTicketTiers = ticketTiers.filter((_, i) => i !== index);
+    const nextTierErrors = ticketTierErrors.filter((_, i) => i !== index);
+
+    setTicketTiers(nextTicketTiers);
+    setTicketTierErrors(nextTierErrors);
+    clearFormErrorIfResolved({
+      title: titleError,
+      description: descriptionError,
+      dateTime: dateTimeError,
+      location: locationError,
+      bannerImageUrl: bannerImageUrlError,
+      ticketTierErrors: nextTierErrors,
     });
   }
 
@@ -54,6 +255,12 @@ export default function CreateEventForm() {
     setLocation("");
     setBannerImageUrl("");
     setTicketTiers([emptyTier()]);
+    setTitleError("");
+    setDescriptionError("");
+    setDateTimeError("");
+    setLocationError("");
+    setBannerImageUrlError("");
+    setTicketTierErrors([emptyTierError()]);
   }
 
   async function handleSubmit(e: React.SyntheticEvent<HTMLFormElement>) {
@@ -61,6 +268,12 @@ export default function CreateEventForm() {
     setLoading(true);
     setSuccessMessage("");
     setErrorMessage("");
+
+    if (!validateAllFields()) {
+      setErrorMessage("Please fix the highlighted fields.");
+      setLoading(false);
+      return;
+    }
 
     const token = localStorage.getItem("token");
 
@@ -71,7 +284,6 @@ export default function CreateEventForm() {
     }
 
     try {
-      //Try to create an event based on user input
       const response = await fetch("/api/events", {
         method: "POST",
         headers: {
@@ -92,14 +304,31 @@ export default function CreateEventForm() {
         }),
       });
 
-      const data = await response.json();
+      const data: CreateEventResponse = await response.json();
 
       if (!response.ok) {
-        if (data?.error) {
-          setErrorMessage(data.error);
-        } else {
-          setErrorMessage("Failed to create event.");
+        setErrorMessage(data.error || "Failed to create event.");
+
+        if (data.details?.fieldErrors?.title?.[0]) {
+          setTitleError(data.details.fieldErrors.title[0]);
         }
+
+        if (data.details?.fieldErrors?.description?.[0]) {
+          setDescriptionError(data.details.fieldErrors.description[0]);
+        }
+
+        if (data.details?.fieldErrors?.dateTime?.[0]) {
+          setDateTimeError(data.details.fieldErrors.dateTime[0]);
+        }
+
+        if (data.details?.fieldErrors?.location?.[0]) {
+          setLocationError(data.details.fieldErrors.location[0]);
+        }
+
+        if (data.details?.fieldErrors?.bannerImageUrl?.[0]) {
+          setBannerImageUrlError(data.details.fieldErrors.bannerImageUrl[0]);
+        }
+
         return;
       }
 
@@ -118,15 +347,29 @@ export default function CreateEventForm() {
   }
 
   return (
-    <form onSubmit={handleSubmit} className="space-y-5 rounded-2xl border p-6 shadow-sm">
+    <form onSubmit={handleSubmit} noValidate className="space-y-5 rounded-2xl border p-6 shadow-sm">
       <div>
         <label className="mb-1 block text-sm font-medium">Title</label>
         <input
           className="w-full rounded-lg border px-3 py-2"
           value={title}
-          onChange={(e) => setTitle(e.target.value)}
+          onChange={(e) => {
+            const nextValue = e.target.value;
+            const nextError = validateTitle(nextValue);
+            setTitle(nextValue);
+            setTitleError(nextError);
+            clearFormErrorIfResolved({
+              title: nextError,
+              description: descriptionError,
+              dateTime: dateTimeError,
+              location: locationError,
+              bannerImageUrl: bannerImageUrlError,
+              ticketTierErrors,
+            });
+          }}
           placeholder="Event title"
         />
+        {titleError ? <p className="mt-1 text-sm text-red-600">{titleError}</p> : null}
       </div>
 
       <div>
@@ -134,10 +377,26 @@ export default function CreateEventForm() {
         <textarea
           className="w-full rounded-lg border px-3 py-2"
           value={description}
-          onChange={(e) => setDescription(e.target.value)}
+          onChange={(e) => {
+            const nextValue = e.target.value;
+            const nextError = validateDescription(nextValue);
+            setDescription(nextValue);
+            setDescriptionError(nextError);
+            clearFormErrorIfResolved({
+              title: titleError,
+              description: nextError,
+              dateTime: dateTimeError,
+              location: locationError,
+              bannerImageUrl: bannerImageUrlError,
+              ticketTierErrors,
+            });
+          }}
           placeholder="Event description"
           rows={4}
         />
+        {descriptionError ? (
+          <p className="mt-1 text-sm text-red-600">{descriptionError}</p>
+        ) : null}
       </div>
 
       <div>
@@ -146,8 +405,22 @@ export default function CreateEventForm() {
           className="w-full rounded-lg border px-3 py-2"
           type="datetime-local"
           value={dateTime}
-          onChange={(e) => setDateTime(e.target.value)}
+          onChange={(e) => {
+            const nextValue = e.target.value;
+            const nextError = validateDateTime(nextValue);
+            setDateTime(nextValue);
+            setDateTimeError(nextError);
+            clearFormErrorIfResolved({
+              title: titleError,
+              description: descriptionError,
+              dateTime: nextError,
+              location: locationError,
+              bannerImageUrl: bannerImageUrlError,
+              ticketTierErrors,
+            });
+          }}
         />
+        {dateTimeError ? <p className="mt-1 text-sm text-red-600">{dateTimeError}</p> : null}
       </div>
 
       <div>
@@ -155,9 +428,23 @@ export default function CreateEventForm() {
         <input
           className="w-full rounded-lg border px-3 py-2"
           value={location}
-          onChange={(e) => setLocation(e.target.value)}
+          onChange={(e) => {
+            const nextValue = e.target.value;
+            const nextError = validateLocation(nextValue);
+            setLocation(nextValue);
+            setLocationError(nextError);
+            clearFormErrorIfResolved({
+              title: titleError,
+              description: descriptionError,
+              dateTime: dateTimeError,
+              location: nextError,
+              bannerImageUrl: bannerImageUrlError,
+              ticketTierErrors,
+            });
+          }}
           placeholder="Event location"
         />
+        {locationError ? <p className="mt-1 text-sm text-red-600">{locationError}</p> : null}
       </div>
 
       <div>
@@ -165,9 +452,25 @@ export default function CreateEventForm() {
         <input
           className="w-full rounded-lg border px-3 py-2"
           value={bannerImageUrl}
-          onChange={(e) => setBannerImageUrl(e.target.value)}
+          onChange={(e) => {
+            const nextValue = e.target.value;
+            const nextError = validateBannerImageUrl(nextValue);
+            setBannerImageUrl(nextValue);
+            setBannerImageUrlError(nextError);
+            clearFormErrorIfResolved({
+              title: titleError,
+              description: descriptionError,
+              dateTime: dateTimeError,
+              location: locationError,
+              bannerImageUrl: nextError,
+              ticketTierErrors,
+            });
+          }}
           placeholder="Optional image URL"
         />
+        {bannerImageUrlError ? (
+          <p className="mt-1 text-sm text-red-600">{bannerImageUrlError}</p>
+        ) : null}
       </div>
 
       <div className="space-y-4">
@@ -192,6 +495,9 @@ export default function CreateEventForm() {
                 onChange={(e) => updateTier(index, "name", e.target.value)}
                 placeholder="General / VIP / Early Bird"
               />
+              {ticketTierErrors[index]?.name ? (
+                <p className="mt-1 text-sm text-red-600">{ticketTierErrors[index].name}</p>
+              ) : null}
             </div>
 
             <div>
@@ -205,6 +511,9 @@ export default function CreateEventForm() {
                 onChange={(e) => updateTier(index, "price", e.target.value)}
                 placeholder="0"
               />
+              {ticketTierErrors[index]?.price ? (
+                <p className="mt-1 text-sm text-red-600">{ticketTierErrors[index].price}</p>
+              ) : null}
             </div>
 
             <div>
@@ -218,6 +527,11 @@ export default function CreateEventForm() {
                 onChange={(e) => updateTier(index, "quantityLimit", e.target.value)}
                 placeholder="50"
               />
+              {ticketTierErrors[index]?.quantityLimit ? (
+                <p className="mt-1 text-sm text-red-600">
+                  {ticketTierErrors[index].quantityLimit}
+                </p>
+              ) : null}
             </div>
 
             <button
@@ -238,8 +552,8 @@ export default function CreateEventForm() {
       >
         {loading ? "Creating..." : "Create Event"}
       </button>
-      
-     {successMessage ? (
+
+      {successMessage ? (
         <div className="rounded-lg border border-green-300 bg-green-50 px-4 py-3 text-sm">
           {successMessage}
         </div>
@@ -251,6 +565,5 @@ export default function CreateEventForm() {
         </div>
       ) : null}
     </form>
-    
   );
 }
