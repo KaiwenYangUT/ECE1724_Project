@@ -1,6 +1,6 @@
 "use client";
 
-import { useCallback, useEffect, useMemo, useState } from "react";
+import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import {
   Bar,
   BarChart,
@@ -14,6 +14,8 @@ import {
   XAxis,
   YAxis,
 } from "recharts";
+
+import { extractTicketTokenFromQrValue } from "@/lib/tickets/qr";
 
 type DashboardResponse = {
   event?: {
@@ -95,6 +97,22 @@ type CheckInResponse = {
   };
 };
 
+type Html5QrcodeInstance = {
+  clear: () => void;
+  isScanning: boolean;
+  start: (
+    cameraIdOrConfig: string | MediaTrackConstraints,
+    configuration: {
+      fps?: number;
+      qrbox?: number;
+      aspectRatio?: number;
+    },
+    qrCodeSuccessCallback: (decodedText: string) => void,
+    qrCodeErrorCallback?: (errorMessage: string) => void,
+  ) => Promise<null>;
+  stop: () => Promise<void>;
+};
+
 const PIE_COLORS = ["#16a34a", "#94a3b8"];
 
 export default function EventDashboard({ eventId }: { eventId: string }) {
@@ -108,13 +126,18 @@ export default function EventDashboard({ eventId }: { eventId: string }) {
   const [assigningStaff, setAssigningStaff] = useState(false);
   const [assignStaffMessage, setAssignStaffMessage] = useState("");
   const [assignStaffError, setAssignStaffError] = useState("");
-  const [ticketToken, setTicketToken] = useState("");
+  const [ticketInput, setTicketInput] = useState("");
   const [isCheckingIn, setIsCheckingIn] = useState(false);
   const [checkInMessage, setCheckInMessage] = useState("");
   const [checkInError, setCheckInError] = useState("");
   const [checkedInTicket, setCheckedInTicket] = useState<CheckInResponse["ticket"] | null>(
     null,
   );
+  const [scannerOpen, setScannerOpen] = useState(false);
+  const [scannerLoading, setScannerLoading] = useState(false);
+  const [scannerError, setScannerError] = useState("");
+  const scannerRef = useRef<Html5QrcodeInstance | null>(null);
+  const scannerRegionId = `ticket-qr-reader-${eventId}`;
 
   const loadDashboard = useCallback(
     async (isInitialLoad = false) => {
@@ -159,6 +182,30 @@ export default function EventDashboard({ eventId }: { eventId: string }) {
     [eventId],
   );
 
+  const stopScanner = useCallback(async () => {
+    const activeScanner = scannerRef.current;
+
+    if (!activeScanner) {
+      return;
+    }
+
+    try {
+      if (activeScanner.isScanning) {
+        await activeScanner.stop();
+      }
+    } catch {
+      // Ignore stop errors while shutting the scanner down.
+    }
+
+    try {
+      activeScanner.clear();
+    } catch {
+      // Ignore clear errors from a partially initialized scanner.
+    }
+
+    scannerRef.current = null;
+  }, []);
+
   useEffect(() => {
     void loadDashboard(true);
 
@@ -168,6 +215,154 @@ export default function EventDashboard({ eventId }: { eventId: string }) {
 
     return () => clearInterval(intervalId);
   }, [eventId, loadDashboard]);
+
+  useEffect(() => {
+    return () => {
+      void stopScanner();
+    };
+  }, [stopScanner]);
+
+  const submitCheckIn = useCallback(
+    async (rawValue: string) => {
+      setIsCheckingIn(true);
+      setCheckInMessage("");
+      setCheckInError("");
+      setCheckedInTicket(null);
+
+      const token = localStorage.getItem("token");
+
+      if (!token) {
+        setCheckInError("Please log in first.");
+        setIsCheckingIn(false);
+        return false;
+      }
+
+      const resolvedQrValue = extractTicketTokenFromQrValue(rawValue);
+
+      if (!resolvedQrValue) {
+        setCheckInError("Enter a valid ticket token or scan a valid ticket QR code.");
+        setIsCheckingIn(false);
+        return false;
+      }
+
+      if (resolvedQrValue.eventId && resolvedQrValue.eventId !== eventId) {
+        setCheckInError("This QR code belongs to a different event.");
+        setIsCheckingIn(false);
+        return false;
+      }
+
+      try {
+        const response = await fetch(`/api/events/${eventId}/dashboard`, {
+          method: "PATCH",
+          headers: {
+            "Content-Type": "application/json",
+            Authorization: `Bearer ${token}`,
+          },
+          body: JSON.stringify({
+            qrCodeToken: resolvedQrValue.token,
+          }),
+        });
+
+        const result: CheckInResponse = await response.json();
+
+        if (!response.ok) {
+          setCheckInError(result.error || "Failed to validate ticket.");
+          if (result.ticket) {
+            setCheckedInTicket(result.ticket);
+          }
+          return false;
+        }
+
+        setTicketInput("");
+        setCheckInMessage(result.message || "Ticket checked in successfully.");
+        setCheckedInTicket(result.ticket || null);
+        await loadDashboard(false);
+        return true;
+      } catch {
+        setCheckInError("Network error. Please try again.");
+        return false;
+      } finally {
+        setIsCheckingIn(false);
+      }
+    },
+    [eventId, loadDashboard],
+  );
+
+  useEffect(() => {
+    if (!scannerOpen) {
+      void stopScanner();
+      setScannerLoading(false);
+      return;
+    }
+
+    let isActive = true;
+
+    async function startScanner() {
+      setScannerError("");
+      setScannerLoading(true);
+
+      try {
+        const { Html5Qrcode, Html5QrcodeSupportedFormats } = await import("html5-qrcode");
+
+        if (!isActive) {
+          return;
+        }
+
+        const scanner = new Html5Qrcode(scannerRegionId, {
+          formatsToSupport: [Html5QrcodeSupportedFormats.QR_CODE],
+          useBarCodeDetectorIfSupported: true,
+          verbose: false,
+        });
+
+        scannerRef.current = scanner as Html5QrcodeInstance;
+
+        await scanner.start(
+          { facingMode: "environment" },
+          {
+            fps: 10,
+            qrbox: 220,
+            aspectRatio: 1,
+          },
+          (decodedText) => {
+            if (!isActive) {
+              return;
+            }
+
+            setTicketInput(decodedText);
+            setScannerOpen(false);
+            void submitCheckIn(decodedText);
+          },
+          () => {
+            // Ignore repeated scan errors while the camera is searching for a QR code.
+          },
+        );
+      } catch (error) {
+        if (!isActive) {
+          return;
+        }
+
+        const errorMessage =
+          error instanceof Error
+            ? error.message
+            : "Camera access failed. Check browser permissions and try again.";
+
+        setScannerError(errorMessage);
+        setScannerOpen(false);
+        await stopScanner();
+      } finally {
+        if (isActive) {
+          setScannerLoading(false);
+        }
+      }
+    }
+
+    void startScanner();
+
+    return () => {
+      isActive = false;
+      void stopScanner();
+    };
+  }, [scannerOpen, scannerRegionId, stopScanner, submitCheckIn]);
 
   async function handleAssignStaff() {
     try {
@@ -215,55 +410,15 @@ export default function EventDashboard({ eventId }: { eventId: string }) {
     }
   }
 
-  async function handleCheckIn() {
-    try {
-      setIsCheckingIn(true);
+  async function handleManualCheckIn() {
+    if (!ticketInput.trim()) {
       setCheckInMessage("");
-      setCheckInError("");
+      setCheckInError("Please enter a ticket token or QR payload.");
       setCheckedInTicket(null);
-
-      const token = localStorage.getItem("token");
-
-      if (!token) {
-        setCheckInError("Please log in first.");
-        return;
-      }
-
-      if (!ticketToken.trim()) {
-        setCheckInError("Please enter a ticket token.");
-        return;
-      }
-
-      const response = await fetch(`/api/events/${eventId}/dashboard`, {
-        method: "PATCH",
-        headers: {
-          "Content-Type": "application/json",
-          Authorization: `Bearer ${token}`,
-        },
-        body: JSON.stringify({
-          qrCodeToken: ticketToken.trim(),
-        }),
-      });
-
-      const result: CheckInResponse = await response.json();
-
-      if (!response.ok) {
-        setCheckInError(result.error || "Failed to validate ticket.");
-        if (result.ticket) {
-          setCheckedInTicket(result.ticket);
-        }
-        return;
-      }
-
-      setCheckInMessage(result.message || "Ticket checked in successfully.");
-      setCheckedInTicket(result.ticket || null);
-      setTicketToken("");
-      await loadDashboard(false);
-    } catch {
-      setCheckInError("Network error. Please try again.");
-    } finally {
-      setIsCheckingIn(false);
+      return;
     }
+
+    await submitCheckIn(ticketInput);
   }
 
   const overviewPieData = useMemo(() => {
@@ -335,27 +490,63 @@ export default function EventDashboard({ eventId }: { eventId: string }) {
 
       <div className="grid gap-6 xl:grid-cols-[1.2fr_0.8fr]">
         <div className="rounded-3xl bg-white p-6 shadow-sm ring-1 ring-slate-200">
-          <h2 className="text-xl font-semibold text-slate-900">Validate Ticket</h2>
+          <h2 className="text-xl font-semibold text-slate-900">Scan Or Validate Ticket</h2>
           <p className="mt-2 text-sm text-slate-600">
-            Enter the QR/token value to verify the ticket belongs to this event and
-            check the attendee in.
+            Scan the QR code with your camera or paste the ticket token. Structured QR
+            payloads and legacy token-only QR codes are both supported.
           </p>
 
           <div className="mt-4 flex flex-col gap-3 sm:flex-row">
-            <input
-              type="text"
-              value={ticketToken}
-              onChange={(event) => setTicketToken(event.target.value)}
-              placeholder="Paste ticket token"
-              className="w-full rounded-xl border border-slate-300 px-3 py-2 text-sm"
-            />
             <button
-              onClick={handleCheckIn}
+              onClick={() => {
+                setScannerError("");
+                setScannerOpen((currentValue) => !currentValue);
+              }}
+              disabled={isCheckingIn}
+              className="rounded-xl bg-slate-900 px-4 py-2 text-sm font-medium text-white disabled:opacity-50"
+            >
+              {scannerOpen ? "Stop Scanner" : "Start QR Scanner"}
+            </button>
+
+            <button
+              onClick={handleManualCheckIn}
               disabled={isCheckingIn}
               className="rounded-xl bg-emerald-600 px-4 py-2 text-sm font-medium text-white disabled:opacity-50"
             >
               {isCheckingIn ? "Checking..." : "Validate & Check In"}
             </button>
+          </div>
+
+          {scannerOpen ? (
+            <div className="mt-4 rounded-2xl border border-slate-200 bg-slate-50 p-4">
+              <div
+                id={scannerRegionId}
+                className="mx-auto min-h-72 w-full overflow-hidden rounded-2xl bg-black"
+              />
+              <p className="mt-3 text-sm text-slate-600">
+                Point the rear camera at the attendee&apos;s QR code.
+              </p>
+              {scannerLoading ? (
+                <p className="mt-2 text-sm text-slate-500">Starting camera...</p>
+              ) : null}
+            </div>
+          ) : null}
+
+          {scannerError ? (
+            <p className="mt-3 text-sm text-red-600">{scannerError}</p>
+          ) : null}
+
+          <div className="mt-4">
+            <label className="mb-2 block text-sm font-medium text-slate-700">
+              Manual Token / QR Payload
+            </label>
+            <input
+              type="text"
+              value={ticketInput}
+              onChange={(event) => setTicketInput(event.target.value)}
+              placeholder="Paste ticket token or scanned QR payload"
+              className="w-full rounded-xl border border-slate-300 px-3 py-2 text-sm"
+            />
           </div>
 
           {checkInMessage ? (

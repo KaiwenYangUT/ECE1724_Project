@@ -5,6 +5,7 @@ import { z } from "zod";
 
 import prisma from "@/lib/prisma";
 import { verifyToken } from "@/lib/auth/jwt";
+import { encodeTicketQrPayload } from "@/lib/tickets/qr";
 
 function extractToken(request: NextRequest): string | null {
   const authHeader = request.headers.get("authorization");
@@ -129,7 +130,8 @@ export async function POST(request: NextRequest) {
       }
 
       const qrCodeToken = randomUUID();
-      const qrCodeDataUrl = await QRCode.toDataURL(qrCodeToken);
+      const qrCodePayload = encodeTicketQrPayload(tier.eventId, qrCodeToken);
+      const qrCodeDataUrl = await QRCode.toDataURL(qrCodePayload);
       
       //create the ticket that linked with the buyer and given QR code 
       return tx.ticket.create({

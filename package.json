@@ -12,6 +12,7 @@
     "@prisma/adapter-pg": "^7.4.2",
     "@prisma/client": "^7.4.2",
     "bcrypt": "^6.0.0",
+    "html5-qrcode": "^2.3.8",
     "jose": "^6.2.0",
     "jsonwebtoken": "^9.0.3",
     "next": "16.1.6",
