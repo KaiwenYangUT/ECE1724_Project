@@ -126,6 +126,8 @@ export default function CreateEventForm() {
   const [dateTime, setDateTime] = useState("");
   const [location, setLocation] = useState("");
   const [bannerImageUrl, setBannerImageUrl] = useState("");
+  const [bannerFile, setBannerFile] = useState<File | null>(null);
+  const [uploadingBanner, setUploadingBanner] = useState(false);
   const [ticketTiers, setTicketTiers] = useState<TicketTierInput[]>([emptyTier()]);
   const [loading, setLoading] = useState(false);
   const [successMessage, setSuccessMessage] = useState("");
@@ -135,6 +137,7 @@ export default function CreateEventForm() {
   const [dateTimeError, setDateTimeError] = useState("");
   const [locationError, setLocationError] = useState("");
   const [bannerImageUrlError, setBannerImageUrlError] = useState("");
+  const [bannerUploadError, setBannerUploadError] = useState("");
   const [ticketTierErrors, setTicketTierErrors] = useState<TicketTierError[]>([emptyTierError()]);
 
   function clearFormErrorIfResolved(nextFormErrors: {
@@ -247,6 +250,42 @@ export default function CreateEventForm() {
       ticketTierErrors: nextTierErrors,
     });
   }
+  
+  async function uploadBannerIfNeeded() {
+    if (!bannerFile) {
+      return bannerImageUrl.trim() || "";
+    }
+
+    setUploadingBanner(true);
+    setBannerUploadError("");
+
+    try {
+      const formData = new FormData();
+      formData.append("file", bannerFile);
+
+      const response = await fetch("/api/upload", {
+        method: "POST",
+        body: formData,
+      });
+
+      const data = await response.json();
+
+      if (!response.ok) {
+        throw new Error(data.error || "Failed to upload banner image.");
+      }
+
+      const uploadedUrl = data.url as string;
+      setBannerImageUrl(uploadedUrl);
+      return uploadedUrl;
+    } catch (error) {
+      const message =
+        error instanceof Error ? error.message : "Failed to upload banner image.";
+      setBannerUploadError(message);
+      return null;
+    } finally {
+      setUploadingBanner(false);
+    }
+  }
 
   function resetForm() {
     setTitle("");
@@ -254,6 +293,8 @@ export default function CreateEventForm() {
     setDateTime("");
     setLocation("");
     setBannerImageUrl("");
+    setBannerFile(null);
+    setBannerUploadError("");
     setTicketTiers([emptyTier()]);
     setTitleError("");
     setDescriptionError("");
@@ -271,6 +312,14 @@ export default function CreateEventForm() {
 
     if (!validateAllFields()) {
       setErrorMessage("Please fix the highlighted fields.");
+      setLoading(false);
+      return;
+    }
+
+    const uploadedBannerUrl = await uploadBannerIfNeeded();
+
+    if (bannerFile && !uploadedBannerUrl) {
+      setErrorMessage("Banner image upload failed.");
       setLoading(false);
       return;
     }
@@ -295,7 +344,7 @@ export default function CreateEventForm() {
           description,
           dateTime,
           location,
-          bannerImageUrl,
+          bannerImageUrl: uploadedBannerUrl ?? bannerImageUrl,
           ticketTiers: ticketTiers.map((tier) => ({
             name: tier.name,
             price: Number(tier.price),
@@ -447,29 +496,80 @@ export default function CreateEventForm() {
         {locationError ? <p className="mt-1 text-sm text-red-600">{locationError}</p> : null}
       </div>
 
-      <div>
-        <label className="mb-1 block text-sm font-medium">Banner Image URL</label>
+      <div className="space-y-3">
+        <label className="mb-1 block text-sm font-medium">Banner Image</label>
+
         <input
           className="w-full rounded-lg border px-3 py-2"
-          value={bannerImageUrl}
+          type="file"
+          accept="image/png,image/jpeg,image/webp"
           onChange={(e) => {
-            const nextValue = e.target.value;
-            const nextError = validateBannerImageUrl(nextValue);
-            setBannerImageUrl(nextValue);
-            setBannerImageUrlError(nextError);
-            clearFormErrorIfResolved({
-              title: titleError,
-              description: descriptionError,
-              dateTime: dateTimeError,
-              location: locationError,
-              bannerImageUrl: nextError,
-              ticketTierErrors,
-            });
+            const file = e.target.files?.[0] ?? null;
+
+            if (!file) {
+              setBannerFile(null);
+              return;
+            }
+
+            const allowedTypes = ["image/png", "image/jpeg", "image/webp"];
+            if (!allowedTypes.includes(file.type)) {
+              setBannerFile(null);
+              setBannerUploadError("Only PNG, JPG, and WEBP images are allowed.");
+              return;
+            }
+
+            if (file.size > 5 * 1024 * 1024) {
+              setBannerFile(null);
+              setBannerUploadError("Banner image must be 5MB or smaller.");
+              return;
+            }
+
+            setBannerFile(file);
+            setBannerUploadError("");
           }}
-          placeholder="Optional image URL"
         />
+
+        <div>
+          <label className="mb-1 block text-sm font-medium">Banner Image URL</label>
+          <input
+            className="w-full rounded-lg border px-3 py-2"
+            value={bannerImageUrl}
+            onChange={(e) => {
+              const nextValue = e.target.value;
+              const nextError = validateBannerImageUrl(nextValue);
+              setBannerImageUrl(nextValue);
+              setBannerImageUrlError(nextError);
+              clearFormErrorIfResolved({
+                title: titleError,
+                description: descriptionError,
+                dateTime: dateTimeError,
+                location: locationError,
+                bannerImageUrl: nextError,
+                ticketTierErrors,
+              });
+            }}
+            placeholder="Optional image URL or uploaded image URL"
+          />
+        </div>
+
+        {uploadingBanner ? (
+          <p className="text-sm text-gray-600">Uploading banner image...</p>
+        ) : null}
+
+        {bannerUploadError ? (
+          <p className="text-sm text-red-600">{bannerUploadError}</p>
+        ) : null}
+
         {bannerImageUrlError ? (
-          <p className="mt-1 text-sm text-red-600">{bannerImageUrlError}</p>
+          <p className="text-sm text-red-600">{bannerImageUrlError}</p>
+        ) : null}
+
+        {bannerImageUrl ? (
+          <img
+            src={bannerImageUrl}
+            alt="Banner preview"
+            className="h-48 w-full rounded-lg border object-cover"
+          />
         ) : null}
       </div>
 
