@@ -163,6 +163,13 @@ export default function EventCard({
       ) : null}
 
       <div className="mx-auto my-6 w-full max-w-4xl rounded-2xl border bg-white p-6 shadow-sm">
+        {event.bannerImageUrl ? (
+          <img
+            src={event.bannerImageUrl}
+            alt={`${event.title} banner`}
+            className="mb-4 h-56 w-full rounded-xl object-cover"
+          />
+        ) : null}
         <div className="mb-4 flex items-start justify-between gap-4">
           <div className="space-y-2">
             <h2 className="text-xl font-semibold">{event.title}</h2>
