@@ -128,6 +128,8 @@ export default function CreateEventForm() {
   const [bannerImageUrl, setBannerImageUrl] = useState("");
   const [bannerFile, setBannerFile] = useState<File | null>(null);
   const [uploadingBanner, setUploadingBanner] = useState(false);
+  const [selectedFileName, setSelectedFileName] = useState("");
+  const [previewUrl, setPreviewUrl] = useState<string | null>(null);
   const [ticketTiers, setTicketTiers] = useState<TicketTierInput[]>([emptyTier()]);
   const [loading, setLoading] = useState(false);
   const [successMessage, setSuccessMessage] = useState("");
@@ -497,38 +499,59 @@ export default function CreateEventForm() {
       </div>
 
       <div className="space-y-3">
-        <label className="mb-1 block text-sm font-medium">Banner Image</label>
+        <label className="block text-sm font-medium">Banner Image</label>
 
-        <input
-          className="w-full rounded-lg border px-3 py-2"
-          type="file"
-          accept="image/png,image/jpeg,image/webp"
-          onChange={(e) => {
-            const file = e.target.files?.[0] ?? null;
+        <label className="flex cursor-pointer items-center justify-center rounded-lg border px-4 py-3 text-sm hover:bg-gray-50">
+          {previewUrl ? "Change Photo" : "Select Photo"}
+        
+          <input
+            type="file"
+            accept="image/png,image/jpeg,image/webp"
+            className="hidden"
+            onChange={(e) => {
+              const file = e.target.files?.[0] ?? null;
 
-            if (!file) {
-              setBannerFile(null);
-              return;
-            }
+              if (!file) {
+                setBannerFile(null);
+                return;
+              }
 
-            const allowedTypes = ["image/png", "image/jpeg", "image/webp"];
-            if (!allowedTypes.includes(file.type)) {
-              setBannerFile(null);
-              setBannerUploadError("Only PNG, JPG, and WEBP images are allowed.");
-              return;
-            }
+              const allowedTypes = ["image/png", "image/jpeg", "image/webp"];
+              if (!allowedTypes.includes(file.type)) {
+                setBannerFile(null);
+                setBannerUploadError("Only PNG, JPG, and WEBP images are allowed.");
+                return;
+              }
 
-            if (file.size > 5 * 1024 * 1024) {
-              setBannerFile(null);
-              setBannerUploadError("Banner image must be 5MB or smaller.");
-              return;
-            }
+              if (file.size > 5 * 1024 * 1024) {
+                setBannerFile(null);
+                setBannerUploadError("Banner image must be 5MB or smaller.");
+                return;
+              }
 
-            setBannerFile(file);
-            setBannerUploadError("");
-          }}
-        />
+              setBannerFile(file);
+              setSelectedFileName(file.name);
+              setPreviewUrl(URL.createObjectURL(file));
+              setBannerUploadError("");
+            }}
+          />
+        </label>
 
+        {previewUrl && (
+          <div className="space-y-2">
+            <img
+              src={previewUrl}
+              alt="Preview"
+              className="h-40 w-full rounded-lg object-cover"
+            />
+            <p className="text-sm text-gray-600">{selectedFileName}</p>
+          </div>
+        )}
+
+        {bannerUploadError && (
+          <p className="text-sm text-red-600">{bannerUploadError}</p>
+        )}
+        
         <div>
           <label className="mb-1 block text-sm font-medium">Banner Image URL</label>
           <input
