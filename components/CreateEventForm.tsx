@@ -502,7 +502,7 @@ export default function CreateEventForm() {
         <label className="block text-sm font-medium">Banner Image</label>
 
         <label className="flex cursor-pointer items-center justify-center rounded-lg border px-4 py-3 text-sm hover:bg-gray-50">
-          {previewUrl ? "Change Photo" : "Select Photo"}
+          {previewUrl ? "Change Image" : "Upload Image"}
         
           <input
             type="file"
