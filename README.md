@@ -16,7 +16,7 @@ This repository contains an Event Ticketing and QR Check-in System built with Ne
 - ✅ Registration confirmation email
 - ✅ Ticket purchase confirmation email
 - ✅ PDF ticket generation and download
-- ⏳ Cloud file storage
+- ✅ Cloud file storage
 - ⏳ Extra polish
 - ⏳ Testing and deployment
 
@@ -55,6 +55,15 @@ This repository contains an Event Ticketing and QR Check-in System built with Ne
 - Check-in counts and percentage
 - Per-tier sold / checked-in / remaining stats
 - Recent check-ins list
+
+### Cloud Storage and File Handling
+
+- Organizer banner image upload during event creation
+- File type and size validation for uploaded images
+- Image upload via backend API
+- Cloud storage using `DigitalOcean Spaces`
+- Public image URL persisted in PostgreSQL through `bannerImageUrl`
+- Event banner rendering in the event list UI
 
 ## Main Routes and APIs
 
@@ -100,6 +109,13 @@ JWT_SECRET="change-this-in-production"
 RESEND_API_KEY="re_your_own_resend_api_key"
 EMAIL_FROM="Event Ticketing <onboarding@resend.dev>"
 APP_BASE_URL="http://localhost:3000"
+
+SPACES_BUCKET="ece1724-event-assets"
+SPACES_REGION="nyc3"
+SPACES_ENDPOINT="https://nyc3.digitaloceanspaces.com"
+SPACES_KEY="your_spaces_access_key"
+SPACES_SECRET="your_spaces_secret_key"
+SPACES_PUBLIC_BASE_URL="https://ece1724-event-assets.nyc3.digitaloceanspaces.com"
 ```
 
 ### 3. Important `.env` notes
