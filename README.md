@@ -1,278 +1,184 @@
-# Event Ticketing Platform
-
-This repository contains an Event Ticketing and QR Check-in System built with Next.js, TypeScript, Prisma, PostgreSQL, and Resend.
-
-## Current Status
-
-- ✅ App setup
-- ✅ Database schema
-- ✅ Authentication and roles
-- ✅ Event management
-- ✅ Ticket purchase and registration
-- ✅ QR generation
-- ✅ QR validation and check-in
-- ✅ Real-time dashboard refresh with polling
-- ✅ Analytics and reporting
-- ✅ Registration confirmation email
-- ✅ Ticket purchase confirmation email
-- ✅ PDF ticket generation and download
-- ✅ Cloud file storage
-- ⏳ Extra polish
-- ⏳ Testing and deployment
-
-## Implemented Features
-
-### Authentication and Roles
-
-- Email/password registration and login
-- Role support for `ORGANIZER`, `STAFF`, and `ATTENDEE`
-- JWT-based authentication
-- Role-aware route protection
-- Registration confirmation email via Resend
-
-### Event Management
-
-- Organizer event creation with ticket tiers
-- Event listing and event details
-- Staff assignment to events
-- Organizer/staff event dashboard
-
-### Tickets
-
-- Ticket purchase flow
-- QR code generation for each ticket
-- Structured QR payloads for scanning
-- Manual token validation fallback
-- Check-in flow for organizer/staff
-- Real-time check-in stats refresh on the dashboard
-- Ticket purchase confirmation email via Resend
-- Downloadable PDF ticket documents
-- PDF ticket attached to purchase confirmation email
-
-### Dashboard and Reporting
-
-- Ticket sales counts
-- Check-in counts and percentage
-- Per-tier sold / checked-in / remaining stats
-- Recent check-ins list
-
-### Cloud Storage and File Handling
+# Final Report
 
-- Organizer banner image upload during event creation
-- File type and size validation for uploaded images
-- Image upload via backend API
-- Cloud storage using `DigitalOcean Spaces`
-- Public image URL persisted in PostgreSQL through `bannerImageUrl`
-- Event banner rendering in the event list UI
+> Template only. Fill in each section before submission.
 
-## Main Routes and APIs
+## Team Information
 
-### Pages
-
-- `/`
-- `/register`
-- `/login`
-- `/events`
-- `/events/create`
-- `/events/[eventId]/dashboard`
-- `/my-tickets`
+- Name:
+- Student Number:
+- Preferred Email:
 
-### APIs
+- Name:
+- Student Number:
+- Preferred Email:
 
-- `POST /api/auth/register`
-- `POST /api/auth/login`
-- `GET /api/events`
-- `POST /api/events`
-- `DELETE /api/events/[eventId]`
-- `GET /api/events/[eventId]/dashboard`
-- `POST /api/events/[eventId]/dashboard`
-- `PATCH /api/events/[eventId]/dashboard`
-- `POST /api/tickets/purchase`
-- `GET /api/users/me/tickets`
-- `GET /api/tickets/[ticketId]/pdf`
+- Name:
+- Student Number:
+- Preferred Email:
 
-## Local Setup
+## Motivation
 
-### 1. Install dependencies
+Event management is a recurring need in university clubs, student associations, workshops, conferences, and community activities, yet many small and medium organizers still rely on fragmented workflows. Registration is often handled through forms or spreadsheets, confirmations are sent manually by email, and on-site entry is checked by comparing names or static screenshots. These approaches are slow, error-prone, and difficult to scale once attendance grows.
 
-```bash
-npm install
-```
+Our team chose this project because it solves a practical and familiar problem with clear real-world value. In a typical manual workflow, organizers have limited visibility into ticket sales, staff cannot verify attendees efficiently at the venue, and attendees experience long check-in lines and inconsistent ticket handling. Fraud prevention is also weak when there is no structured ticket identity, no server-side validation, and no reliable record of whether a ticket has already been used.
 
-### 2. Configure `.env`
+We wanted to build a system that turns event operations into a structured digital workflow. A full-stack ticketing and QR-based check-in platform allows organizers to create events and ticket tiers, attendees to register and receive digital tickets, and organizers or staff to validate entry quickly with immediate feedback. This is meaningful not only because it improves convenience, but also because it demonstrates strong integration across frontend UI, backend logic, authentication, database operations, file generation, email delivery, and cloud storage.
 
-Create or update `.env` with:
+From a course perspective, the project was a strong fit because it naturally requires the technologies and software engineering concerns emphasized in the assignment. It involves a modern frontend, a backend API layer, relational database design, cloud asset storage, role-based authorization, and multiple advanced features working together in one coherent application. The problem is substantial enough to demonstrate technical depth, but still concrete enough that correctness can be evaluated through real user flows.
 
-```env
-DATABASE_URL="postgresql://YOUR_DB_USER:YOUR_DB_PASSWORD@localhost:5432/event_ticketing"
-JWT_SECRET="change-this-in-production"
-RESEND_API_KEY="re_your_own_resend_api_key"
-EMAIL_FROM="Event Ticketing <onboarding@resend.dev>"
-APP_BASE_URL="http://localhost:3000"
+## Objectives
 
-SPACES_BUCKET="ece1724-event-assets"
-SPACES_REGION="nyc3"
-SPACES_ENDPOINT="https://nyc3.digitaloceanspaces.com"
-SPACES_KEY="your_spaces_access_key"
-SPACES_SECRET="your_spaces_secret_key"
-SPACES_PUBLIC_BASE_URL="https://ece1724-event-assets.nyc3.digitaloceanspaces.com"
-```
+The primary objective of the project was to design and implement a complete event ticketing system that supports the full lifecycle of an event, from creation to attendee check-in. We aimed to produce a coherent application rather than a collection of isolated features, so the system needed to connect event setup, ticket issuance, attendee access, and event-day operations through one consistent data model and user flow.
 
-### 3. Important `.env` notes
+More specifically, our team aimed to achieve the following:
 
-Some values are placeholders and must be changed locally. Some can usually stay the same for local development.
+- Build a role-based platform with separate experiences for organizers, staff, and attendees.
+- Allow organizers to create events, define ticket tiers, and manage event operations.
+- Allow attendees to register, log in, browse available events, purchase tickets, and access their issued QR tickets.
+- Support secure QR-based check-in with server-side ticket validation and duplicate check-in prevention.
+- Provide organizers and assigned staff with a dashboard for attendance monitoring and operational management.
+- Integrate supporting services that make the application feel complete in practice, including email confirmations, downloadable PDF tickets, and cloud-hosted event images.
 
-Must customize:
+Beyond functional goals, we also aimed to satisfy the course requirements in a technically meaningful way. The implementation was expected to demonstrate TypeScript across the stack, a Next.js full-stack architecture, relational database operations through Prisma and PostgreSQL, Tailwind CSS based UI development with `shadcn/ui` components, and cloud storage functionality through DigitalOcean Spaces. We therefore treated correctness, integration, and usability as core objectives, not optional polish.
 
-- `DATABASE_URL`
-  - Each teammate must use their own local PostgreSQL username/password.
-  - Example:
-  ```env
-  DATABASE_URL="postgresql://kevinyang:your_password@localhost:5432/event_ticketing"
-  ```
-- `RESEND_API_KEY`
-  - Each teammate needs their own Resend API key if they want to test email features locally.
+## Technical Stack
 
-Usually should customize:
+The application is implemented as a Next.js full-stack web system using TypeScript for both client-side and server-side logic. This approach allowed us to keep the frontend pages, API routes, validation logic, and shared utility code in one cohesive codebase while still maintaining clear separation of responsibilities between UI components, route handlers, and backend helper modules.
 
-- `JWT_SECRET`
-  - For local development, any non-empty secret works.
-  - It does not need to match across teammates unless you are sharing tokens, which you are not.
+On the frontend, we used React through the Next.js App Router to build the user interface. Styling is primarily handled with Tailwind CSS, and we integrated `shadcn/ui` components for reusable UI primitives such as cards, buttons, inputs, alerts, badges, and labels. This stack was used to build the landing page, authentication forms, event creation flow, event browsing interface, personal ticket views, and organizer/staff dashboard interactions. For data visualization on the dashboard, we used Recharts to present check-in and ticket statistics.
 
-Usually does not need to change for local development:
+On the backend, we used Next.js Route Handlers under `app/api` to implement the application logic. These handlers cover user registration and login, event creation and retrieval, ticket purchasing, dashboard access, staff assignment, ticket PDF generation, and image uploads. Validation is performed with Zod schemas, which helped ensure that user input is checked consistently before any database write occurs. Authentication is implemented with JWT-based tokens, password hashing is handled with `bcrypt`, and role-based access control is enforced in backend routes and dashboard operations.
 
-- `APP_BASE_URL`
-  - Keep as `http://localhost:3000` unless you run the app on a different port.
+For the database layer, we used PostgreSQL together with Prisma ORM. Prisma models define the core entities of the system: `User`, `Event`, `EventStaff`, `TicketTier`, and `Ticket`. These relationships allow the system to support organizer-owned events, assigned staff, ticket tiers with quantity limits, per-user ticket ownership, and ticket status updates at check-in time. Prisma queries and transactions are used throughout the backend to enforce constraints such as preventing duplicate ticket purchases and ensuring ticket-tier inventory is respected.
 
-May need to change depending on email setup:
+Several additional technologies were integrated to support the complete workflow:
 
-- `EMAIL_FROM`
-  - `Event Ticketing <onboarding@resend.dev>` is suitable for simple Resend testing only if Resend allows it for your account.
-  - For reliable use, especially for real inbox delivery, use a verified sender/domain from your own Resend account.
+- `qrcode` is used to generate per-ticket QR code images.
+- A structured QR payload format is used so the dashboard can validate that a scanned ticket belongs to the correct event.
+- `html5-qrcode` powers browser-based scanning in the event dashboard.
+- `pdf-lib` is used to generate downloadable PDF tickets containing ticket details and the QR code.
+- Resend is used for registration confirmation and ticket purchase confirmation emails.
+- DigitalOcean Spaces, accessed through the AWS S3 client, is used for cloud storage of uploaded event banner images.
 
-## Resend Setup For Teammates
+Overall, the stack reflects the final implementation rather than only the proposal. In particular, the system demonstrates all of the major required technical areas in the rubric: TypeScript, a Next.js/React frontend, a Next.js backend, database operations with PostgreSQL and Prisma, cloud storage functionality, and a modern responsive UI supported by Tailwind CSS and `shadcn/ui`.
 
-If a teammate wants registration emails or ticket purchase emails to work on their machine, they need their own Resend configuration.
+## Features
 
-### What each teammate needs
+The implemented system covers the complete core workflow of an event ticketing platform and integrates the main technologies required by the course project. The features below are not standalone demos; they operate together through shared authentication, database relationships, and user flows.
 
-- A Resend account
-- Their own `RESEND_API_KEY`
-- A valid sender address for `EMAIL_FROM`
+### 1. Authentication and Role-Based Access Control
 
-### How to get a Resend API key
+The platform supports account registration and login for three roles: `ORGANIZER`, `STAFF`, and `ATTENDEE`. Registration validates the input using Zod, stores hashed passwords, and sends a confirmation email when email configuration is available. Login verifies credentials and returns a JWT used for authenticated requests.
 
-1. Go to `https://resend.com`
-2. Sign up or log in
-3. Open the Resend dashboard
-4. Go to `API Keys`
-5. Create a new API key
-6. Copy it into `.env` as:
+Role-based access control is enforced both in the interface and in backend logic. Only organizers can create events, only organizers can assign staff to their own events, and only organizers or assigned staff can access the management dashboard for a given event. This feature is important because it provides the security and separation of responsibilities needed for a multi-user operational system rather than a single-user prototype.
 
-```env
-RESEND_API_KEY="re_your_own_resend_api_key"
-```
+### 2. Event Creation and Event Browsing
 
-### Sender address notes
+Organizers can create events by entering event details, setting a future date and time, adding one or more ticket tiers, and optionally uploading a banner image. Each ticket tier includes a name, price, and quantity limit. Validation is performed on both the client and server to ensure incomplete or invalid event data is rejected before it reaches the database.
 
-- For quick testing, teammates can try:
+All users can browse events through a central listing page. The event list shows event details, organizer information, optional banner images, available ticket tiers, and remaining ticket counts. Organizers can delete their own events, while organizers and assigned staff can navigate directly to the event management dashboard. This feature establishes the main entry point into the system and connects the organizer workflow with the attendee workflow.
 
-```env
-EMAIL_FROM="Event Ticketing <onboarding@resend.dev>"
-```
+### 3. Ticket Purchase and Issuance
 
-- If Resend rejects sending or emails do not arrive reliably, they should verify their own domain in Resend and use something like:
+Attendees can purchase tickets for available events by selecting a ticket tier. The purchase backend validates authentication, confirms that the selected tier belongs to the chosen event, rejects purchases for past events, prevents duplicate purchases of the same tier by the same user, and checks ticket-tier capacity before issuing the ticket.
 
-```env
-EMAIL_FROM="Event Ticketing <noreply@yourdomain.com>"
-```
+When a purchase succeeds, the system generates a unique ticket token and QR code, stores the ticket in the database, and returns the issued ticket to the user interface. This functionality is central to the project because it converts event and ticket-tier definitions into real attendee-owned tickets while preserving correctness and inventory rules.
 
-### Important
+### 4. QR Code Tickets and Check-In Validation
 
-- Do not commit real Resend API keys to git.
-- Do not share personal API keys inside the repository.
-- Each teammate should keep their own `.env` local.
+Each issued ticket includes a unique QR code payload associated with the event and ticket token. Organizers or assigned staff can check in attendees through the event dashboard either by scanning the QR code in the browser or by manually entering the ticket token. The backend verifies that the ticket belongs to the current event, confirms that it exists, and prevents duplicate check-ins by checking the current ticket state in the database.
 
-## Database Setup
+This feature addresses one of the core problems identified in the motivation: slow and unreliable manual entry validation. Instead of a static image or a spreadsheet lookup, check-in is tied to a database-backed ticket record with immediate status feedback and an auditable check-in time.
 
-### 1. Make sure PostgreSQL is running
+### 5. Organizer and Staff Event Dashboard
 
-Example on macOS with Homebrew:
+For each event, organizers and assigned staff can access a dashboard that combines operational actions and reporting. The dashboard supports ticket check-in, shows aggregate statistics such as total sold, total checked in, remaining attendees, and check-in rate, and breaks ticket activity down by ticket tier. It also displays recent check-ins and allows organizers to assign staff members to the event.
 
-```bash
-brew services start postgresql@17
-```
+To keep the dashboard current during event operation, the client refreshes dashboard data on a timed polling interval. While this is not implemented using WebSockets, it still provides near-real-time operational visibility and keeps the dashboard synchronized with check-in activity during usage.
 
-### 2. Create the database if needed
+### 6. Personal Ticket Management
 
-```bash
-createdb event_ticketing
-```
+Authenticated attendees can open a dedicated “My Tickets” page to view all of their purchased tickets. Each ticket view includes the event details, ticket-tier information, QR code, and a computed status such as valid, checked in, or expired. Newly purchased tickets can be highlighted automatically after checkout, making the purchase-to-access flow more coherent from a user perspective.
 
-### 3. Run Prisma migrations
+This feature improves usability because attendees do not need to depend on email alone to retrieve their ticket. The application itself acts as a persistent ticket wallet tied to the user account.
 
-```bash
-npx prisma migrate dev
-```
+### 7. PDF Ticket Generation
 
-### 4. Start the app
+The system supports downloadable PDF tickets generated on demand using `pdf-lib`. Each PDF contains the event title, attendee details, organizer name, ticket tier, purchase time, ticket status, token, and embedded QR code. This gives users a portable ticket format that can be stored or presented independently of the live application session.
 
-```bash
-npm run dev
-```
+PDF generation strengthens the completeness of the system because it extends the ticket from an in-app record into a practical artifact that can be used during real event operations.
 
-Then open:
+### 8. Transactional Email Confirmations
 
-`http://localhost:3000`
+The application integrates Resend to send registration confirmation emails and ticket purchase confirmation emails. Purchase emails summarize event and ticket details and include the generated PDF ticket as an attachment. The implementation is designed so that core platform actions can still succeed even if email sending fails, which improves robustness while still demonstrating external service integration.
 
-## Email Feature Notes
+This feature satisfies the advanced-service aspect of the project requirements and makes the application closer to a deployable real-world product.
 
-### Registration confirmation email
+### 9. Cloud Storage for Event Assets
 
-- Sent immediately after successful account creation
-- If Resend config is missing, registration still succeeds and email is skipped
+Organizers can upload event banner images through the application. Uploaded files are validated for type and size, then stored in DigitalOcean Spaces using an S3-compatible client. The public asset URL is stored in the database and later rendered in the event listing and ticket views where relevant.
 
-### Ticket purchase confirmation email
+This feature demonstrates cloud storage functionality as required by the rubric and shows that the system is not limited to purely local or database-only data handling.
 
-- Sent immediately after successful ticket purchase
-- Includes ticket details
-- Includes the PDF ticket as an attachment
-- If email sending fails, ticket purchase still succeeds
+### 10. Fulfillment of Course Requirements Through Integrated Features
 
-### Important when testing email changes
+Taken together, the implemented features satisfy the project requirements at both the technical and functional levels. The system includes:
 
-If you change `.env` or server-side email code, restart the dev server:
+- TypeScript across frontend, backend, and shared modules.
+- A Next.js/React frontend styled with Tailwind CSS and enhanced with `shadcn/ui`.
+- A Next.js backend using route handlers for structured API operations.
+- Relational database operations through Prisma and PostgreSQL.
+- Cloud storage integration through DigitalOcean Spaces.
+- Multiple advanced capabilities, including authentication and authorization, QR processing, email integration, PDF generation, analytics, and event-operations tooling.
 
-```bash
-npm run dev
-```
+Most importantly, these features form one coherent user flow: organizers create and manage events, attendees register and purchase tickets, tickets are issued as QR-backed digital records, and event staff use the dashboard to verify attendance and monitor progress. This coherence is a key reason the system aligns well with the final-report rubric’s emphasis on completeness, correctness, and overall system quality.
 
-Otherwise the running app may still use stale config.
+## User Guide
 
-## PDF Ticket Notes
+[Provide clear instructions for using each main feature. Add screenshots where appropriate.]
 
-- Users can download their own ticket PDF from `My Tickets`
-- The PDF includes:
-  - attendee information
-  - event title, description, date/time, and location
-  - organizer name
-  - ticket tier and price
-  - ticket token
-  - QR code
-  - check-in status
+## Development Guide
 
-## Team Notes
+### Environment Setup and Configuration
 
-- If you add or change Prisma models, run:
+[Document environment variables, prerequisites, and configuration steps.]
 
-```bash
-npx prisma migrate dev --name <migration_name>
-```
+### Database Initialization
 
-- If Prisma client needs regeneration:
+[Document database setup, migration, and initialization steps.]
 
-```bash
-npx prisma generate
-```
+### Cloud Storage Configuration
 
-- If you add new server-side env variables, document them in this README.
+[Document cloud storage setup and required credentials/configuration.]
+
+### Local Development and Testing
+
+[Document how to run the project locally and how to test it.]
+
+## Deployment Information
+
+[If applicable, provide the live URL and deployment platform details.]
+
+## AI Assistance & Verification (Summary)
+
+[Provide a concise summary of how AI tools contributed to the project and how correctness was verified.]
+
+### Where AI Meaningfully Contributed
+
+[Briefly describe where AI was used, such as architecture exploration, database queries, debugging, or documentation.]
+
+### Representative Mistake or Limitation in AI Output
+
+[Briefly describe one representative mistake or limitation. Reference `ai-session.md` for concrete examples.]
+
+### How Correctness Was Verified
+
+[Briefly describe how outputs were verified, such as manual testing, logs, unit tests, or integration tests.]
+
+## Individual Contributions
+
+[Describe the specific contributions of each team member, aligned with the Git commit history.]
+
+## Lessons Learned and Concluding Remarks
+
+[Summarize key lessons learned, development insights, and final reflections on the project.]
