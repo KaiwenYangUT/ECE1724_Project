@@ -5,16 +5,20 @@
 ## Team Information
 
 - Name:
-- Student Number:
-- Preferred Email:
+    - Student Number:
+    - Preferred Email:
 
 - Name:
-- Student Number:
-- Preferred Email:
+    - Student Number:
+    - Preferred Email:
 
 - Name:
-- Student Number:
-- Preferred Email:
+    - Student Number:
+    - Preferred Email:
+
+- Name: Kaiwen Yang (Kevin)
+    - Student Number: 1007648066
+    - Preferred Email: kaiwen.yang@mail.utoronto.ca
 
 ## Motivation
 
@@ -177,7 +181,22 @@ Most importantly, these features form one coherent user flow: organizers create 
 
 ## Individual Contributions
 
-[Describe the specific contributions of each team member, aligned with the Git commit history.]
+### [name]
+
+### [name]
+
+### [name]
+
+### Kaiwen Yang (Kevin)
+
+- Constructed the basic project structure in the early phase of development and helped divide the project into 10 actionable milestones for team execution.
+- Implemented registration confirmation and ticket purchase confirmation emails using Resend.
+- Added PDF ticket generation, PDF download support, and PDF ticket attachments in purchase confirmation emails.
+- Implemented the QR scanner based check-in flow and related QR utility logic for the event dashboard.
+- Improved the event management experience by enhancing create-event validation feedback and navigation flow.
+- Added home-page navigation improvements to make key user flows easier to reach.
+- Integrated `shadcn/ui` into existing screens, including the landing page, login form, and registration form.
+- Wrote the `Motivation`, `Objectives`, `Technical Stack`, and `Features` sections of the final report.
 
 ## Lessons Learned and Concluding Remarks
 
