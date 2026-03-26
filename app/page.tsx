@@ -1,92 +1,178 @@
 "use client";
 
 import Link from "next/link";
-import { useEffect, useState } from "react";
+import { useSyncExternalStore } from "react";
+import { Badge } from "@/components/ui/badge";
+import { Button, buttonVariants } from "@/components/ui/button";
+import {
+  Card,
+  CardContent,
+  CardDescription,
+  CardHeader,
+  CardTitle,
+} from "@/components/ui/card";
+import { cn } from "@/lib/utils";
 
 type UserRole = "ATTENDEE" | "STAFF" | "ORGANIZER" | "";
+type SessionState = {
+  isLoggedIn: boolean;
+  userName: string;
+  userRole: UserRole;
+};
+
+const SESSION_EVENT = "session-change";
+const LOGGED_OUT_SNAPSHOT = JSON.stringify({
+  isLoggedIn: false,
+  userName: "",
+  userRole: "",
+} satisfies SessionState);
+
+function getClientSessionSnapshot() {
+  const token = localStorage.getItem("token");
+  return JSON.stringify({
+    isLoggedIn: Boolean(token),
+    userName: localStorage.getItem("userName") || "",
+    userRole: (localStorage.getItem("userRole") || "") as UserRole,
+  } satisfies SessionState);
+}
+
+function subscribeToSession(callback: () => void) {
+  const handleStorage = () => callback();
+  window.addEventListener("storage", handleStorage);
+  window.addEventListener(SESSION_EVENT, handleStorage);
+  return () => {
+    window.removeEventListener("storage", handleStorage);
+    window.removeEventListener(SESSION_EVENT, handleStorage);
+  };
+}
+
+type FeatureCardProps = {
+  href: string;
+  eyebrow: string;
+  title: string;
+  description: string;
+  accentClasses: string;
+  icon: React.ReactNode;
+};
+
+function FeatureCard({
+  href,
+  eyebrow,
+  title,
+  description,
+  accentClasses,
+  icon,
+}: FeatureCardProps) {
+  return (
+    <Link href={href} className="block h-full">
+      <Card className="group flex h-full flex-row items-center gap-5 border-slate-200 transition hover:-translate-y-1 hover:shadow-lg">
+        <CardContent className="flex w-full items-center gap-5 p-6">
+          <div
+            className={`flex h-16 w-16 shrink-0 items-center justify-center rounded-2xl ${accentClasses}`}
+          >
+            {icon}
+          </div>
+
+          <div className="flex-1">
+            <p className="text-sm font-semibold uppercase tracking-wide text-slate-500">
+              {eyebrow}
+            </p>
+            <CardTitle className="mt-1 text-2xl text-slate-900">{title}</CardTitle>
+            <CardDescription className="mt-2 text-base leading-7 text-slate-600">
+              {description}
+            </CardDescription>
+            <div className="mt-4 text-sm font-semibold text-slate-900">
+              Open page <span className="transition group-hover:ml-1">→</span>
+            </div>
+          </div>
+        </CardContent>
+      </Card>
+    </Link>
+  );
+}
 
 export default function HomePage() {
-  const [isLoggedIn, setIsLoggedIn] = useState(false);
-  const [userName, setUserName] = useState("");
-  const [userRole, setUserRole] = useState<UserRole>("");
-
-  useEffect(() => {
-    const token = localStorage.getItem("token");
-    const storedName = localStorage.getItem("userName") || "";
-    const storedRole = (localStorage.getItem("userRole") || "") as UserRole;
-
-    if (token) {
-      setIsLoggedIn(true);
-      setUserName(storedName);
-      setUserRole(storedRole);
-    }
-  }, []);
+  const sessionSnapshot = useSyncExternalStore(
+    subscribeToSession,
+    getClientSessionSnapshot,
+    () => LOGGED_OUT_SNAPSHOT
+  );
+  const session = JSON.parse(sessionSnapshot) as SessionState;
+  const { isLoggedIn, userName, userRole } = session;
 
   function handleLogout() {
     localStorage.removeItem("token");
     localStorage.removeItem("userName");
     localStorage.removeItem("userRole");
-
-    setIsLoggedIn(false);
-    setUserName("");
-    setUserRole("");
+    window.dispatchEvent(new Event(SESSION_EVENT));
   }
 
   return (
     <main className="min-h-screen bg-gradient-to-br from-slate-50 via-white to-sky-50">
       <section className="mx-auto max-w-6xl px-6 py-12">
-        <div className="mb-12 rounded-3xl bg-white p-8 shadow-sm ring-1 ring-slate-200">
-          <div className="max-w-3xl">
-            <p className="mb-3 inline-block rounded-full bg-blue-100 px-4 py-1 text-sm font-medium text-blue-700">
+        <Card className="mb-12 rounded-3xl border-slate-200 shadow-lg shadow-slate-200/60">
+          <CardHeader className="max-w-3xl p-8">
+            <Badge className="mb-3 w-fit bg-sky-100 text-sky-800 hover:bg-sky-100">
               ECE1724 Project
-            </p>
-
-            <h1 className="text-4xl font-bold tracking-tight text-slate-900 md:text-5xl">
+            </Badge>
+            <CardTitle className="text-4xl tracking-tight text-slate-900 md:text-5xl">
               Event Ticketing System
-            </h1>
-
-            <div className="mt-8 flex flex-wrap gap-4">
-              
-
+            </CardTitle>
+            <CardDescription className="text-base leading-7 text-slate-600">
+              Browse campus events, register accounts, purchase tickets, and manage
+              operations from one place.
+            </CardDescription>
+          </CardHeader>
+          <CardContent className="px-8 pb-8 pt-0">
+            <div className="flex flex-wrap items-center gap-4">
               {!isLoggedIn ? (
                 <>
                   <Link
                     href="/login/create"
-                    className="rounded-xl bg-emerald-500 px-5 py-3 text-sm font-semibold text-white transition hover:bg-emerald-600"
+                    className={cn(
+                      buttonVariants({ size: "default" }),
+                      "rounded-xl bg-emerald-500 hover:bg-emerald-600"
+                    )}
                   >
                     Login
                   </Link>
 
                   <Link
                     href="/register"
-                    className="rounded-xl bg-blue-500 px-5 py-3 text-sm font-semibold text-white transition hover:bg-blue-600"
+                    className={cn(
+                      buttonVariants({ variant: "outline", size: "default" }),
+                      "rounded-xl border-blue-200 text-blue-700 hover:bg-blue-50 hover:text-blue-800"
+                    )}
                   >
                     Register
                   </Link>
                 </>
               ) : (
                 <>
-                  <div className="rounded-xl bg-sky-100 px-5 py-3 text-lg font-semibold text-sky-800">
-                    Hello, {userName || "User"} !
-                  </div>
+                  <Badge className="rounded-xl bg-sky-100 px-4 py-3 text-base font-semibold text-sky-800 hover:bg-sky-100">
+                    Hello, {userName || "User"}!
+                  </Badge>
 
-                  <button
+                  <Button
                     onClick={handleLogout}
-                    className="rounded-xl bg-slate-600 px-5 py-3 text-sm font-semibold text-white transition hover:bg-slate-900"
+                    variant="secondary"
+                    className="rounded-xl bg-slate-200 text-slate-900 hover:bg-slate-300"
                   >
                     Logout
-                  </button>
+                  </Button>
                 </>
               )}
             </div>
-          </div>
-        </div>
+          </CardContent>
+        </Card>
         <div className="grid gap-6 sm:grid-cols-2 xl:grid-cols-3">
-          <Link
+          <FeatureCard
             href="/events"
-            className="group flex items-center gap-5 rounded-3xl bg-white p-6 shadow-sm ring-1 ring-slate-200 transition hover:-translate-y-1 hover:shadow-md"
-          >
-            <div className="flex h-16 w-16 shrink-0 items-center justify-center rounded-2xl bg-violet-100 text-violet-600">
+            eyebrow="Event Access"
+            title="Browse Events"
+            description="View available events and ticket tiers."
+            accentClasses="bg-violet-100 text-violet-600"
+            icon={
               <svg
                 xmlns="http://www.w3.org/2000/svg"
                 viewBox="0 0 24 24"
@@ -96,27 +182,18 @@ export default function HomePage() {
                 <path d="M19 4h-1V2h-2v2H8V2H6v2H5a2 2 0 0 0-2 2v3h18V6a2 2 0 0 0-2-2Z" />
                 <path d="M3 11v7a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7H3Zm5 2h3v3H8v-3Z" />
               </svg>
-            </div>
-
-            <div className="flex-1">
-              <p className="text-sm font-semibold uppercase tracking-wide text-violet-600">
-                Event Access
-              </p>
-              <h2 className="mt-1 text-2xl font-bold text-slate-900">Browse Events</h2>
-              <p className="mt-2 leading-7 text-slate-600">
-                View available events & ticket tiers.
-              </p>
-              <div className="mt-4 text-sm font-semibold text-violet-600">
-                Open page <span className="transition group-hover:ml-1">→</span>
-              </div>
-            </div>
-          </Link>
+            }
+          />
           
           {!isLoggedIn && (
-            <div className="overflow-hidden rounded-3xl bg-white p-6 shadow-sm ring-1 ring-slate-200 sm:col-span-2 xl:col-span-2">
-              <div className="mb-5">
-              </div>
-
+            <Card className="overflow-hidden rounded-3xl border-slate-200 sm:col-span-2 xl:col-span-2">
+              <CardHeader className="pb-4">
+                <CardTitle className="text-xl">Discover upcoming experiences</CardTitle>
+                <CardDescription>
+                  Sign in or register to purchase tickets and keep your passes in one place.
+                </CardDescription>
+              </CardHeader>
+              <CardContent className="pt-0">
               <div className="grid grid-cols-2 gap-4 md:grid-cols-4">
                 <div className="overflow-hidden rounded-2xl">
                   <img
@@ -150,15 +227,18 @@ export default function HomePage() {
                   />
                 </div>
               </div>
-            </div>
+              </CardContent>
+            </Card>
           )}
 
           {isLoggedIn && (
-            <Link
+            <FeatureCard
               href="/my-tickets"
-              className="group flex items-center gap-5 rounded-3xl bg-white p-6 shadow-sm ring-1 ring-slate-200 transition hover:-translate-y-1 hover:shadow-md"
-            >
-              <div className="flex h-16 w-16 shrink-0 items-center justify-center rounded-2xl bg-cyan-100 text-cyan-600">
+              eyebrow="Personal Access"
+              title="My Tickets"
+              description="See your registered events and QR codes."
+              accentClasses="bg-cyan-100 text-cyan-600"
+              icon={
                 <svg
                   xmlns="http://www.w3.org/2000/svg"
                   viewBox="0 0 24 24"
@@ -167,29 +247,18 @@ export default function HomePage() {
                 >
                   <path d="M4 7a2 2 0 0 1 2-2h12a2 2 0 0 1 2 2v3a1 1 0 0 0 0 2v3a2 2 0 0 1-2 2H6a2 2 0 0 1-2-2v-3a1 1 0 0 0 0-2V7Zm5 1a1 1 0 0 0-2 0v8a1 1 0 1 0 2 0V8Zm8 0H11v2h6V8Zm0 4H11v2h6v-2Z" />
                 </svg>
-              </div>
-
-              <div className="flex-1">
-                <p className="text-sm font-semibold uppercase tracking-wide text-cyan-600">
-                  Personal Access
-                </p>
-                <h2 className="mt-1 text-2xl font-bold text-slate-900">My Tickets</h2>
-                <p className="mt-2 leading-7 text-slate-600">
-                  See your registered events and QR codes.
-                </p>
-                <div className="mt-4 text-sm font-semibold text-cyan-600">
-                  Open page <span className="transition group-hover:ml-1">→</span>
-                </div>
-              </div>
-            </Link>
+              }
+            />
           )}
 
           {isLoggedIn && userRole === "ORGANIZER" && (
-            <Link
+            <FeatureCard
               href="/events/create"
-              className="group flex items-center gap-5 rounded-3xl bg-white p-6 shadow-sm ring-1 ring-slate-200 transition hover:-translate-y-1 hover:shadow-md"
-            >
-              <div className="flex h-16 w-16 shrink-0 items-center justify-center rounded-2xl bg-orange-100 text-orange-600">
+              eyebrow="Organizer Access"
+              title="Create Event"
+              description="Create a new event and set ticket tiers."
+              accentClasses="bg-orange-100 text-orange-600"
+              icon={
                 <svg
                   xmlns="http://www.w3.org/2000/svg"
                   viewBox="0 0 24 24"
@@ -200,21 +269,8 @@ export default function HomePage() {
                   <path d="M14.56 4.97a1.75 1.75 0 0 1 2.475 0l1.995 1.995a1.75 1.75 0 0 1 0 2.475l-6.9 6.9a2.25 2.25 0 0 1-1.02.57l-2.295.574a.75.75 0 0 1-.91-.91l.574-2.295a2.25 2.25 0 0 1 .57-1.02l6.9-6.9Z" />
                   <path d="M9.75 7.5a.75.75 0 0 1 .75-.75h1.75a.75.75 0 0 1 0 1.5H10.5a.75.75 0 0 1-.75-.75Zm0 3.5a.75.75 0 0 1 .75-.75h1a.75.75 0 0 1 0 1.5h-1a.75.75 0 0 1-.75-.75Zm0 3.5a.75.75 0 0 1 .75-.75h.5a.75.75 0 0 1 0 1.5h-.5a.75.75 0 0 1-.75-.75Z" />
                 </svg>
-              </div>
-
-              <div className="flex-1">
-                <p className="text-sm font-semibold uppercase tracking-wide text-orange-600">
-                  Organizer Access
-                </p>
-                <h2 className="mt-1 text-2xl font-bold text-slate-900">Create Event</h2>
-                <p className="mt-2 leading-7 text-slate-600">
-                  Create a new event and set ticket tiers.
-                </p>
-                <div className="mt-4 text-sm font-semibold text-orange-600">
-                  Open page <span className="transition group-hover:ml-1">→</span>
-                </div>
-              </div>
-            </Link>
+              }
+            />
           )}
         </div>
       </section>

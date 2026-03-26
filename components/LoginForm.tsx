@@ -3,6 +3,17 @@
 import * as React from "react";
 import { useState } from "react";
 import { useRouter } from "next/navigation";
+import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert";
+import { Button } from "@/components/ui/button";
+import {
+  Card,
+  CardContent,
+  CardDescription,
+  CardHeader,
+  CardTitle,
+} from "@/components/ui/card";
+import { Input } from "@/components/ui/input";
+import { Label } from "@/components/ui/label";
 
 type LoginResponse = {
   message?: string;
@@ -104,59 +115,62 @@ export default function LoginForm() {
   }
 
   return (
-    <form
-      onSubmit={handleSubmit}
-      className="space-y-5 rounded-2xl border p-6 shadow-sm"
-    >
-      <h1 className="text-2xl font-semibold">Login</h1>
+    <Card className="border-slate-200/80 shadow-lg shadow-slate-200/40">
+      <CardHeader className="space-y-2">
+        <CardTitle className="text-2xl">Login</CardTitle>
+        <CardDescription>
+          Sign in to purchase tickets, manage events, or view your QR passes.
+        </CardDescription>
+      </CardHeader>
+      <CardContent>
+        <form onSubmit={handleSubmit} className="space-y-5">
+          {successMessage ? (
+            <Alert className="border-green-200 bg-green-50 text-green-900">
+              <AlertTitle>Success</AlertTitle>
+              <AlertDescription>{successMessage}</AlertDescription>
+            </Alert>
+          ) : null}
 
-      {successMessage ? (
-        <div className="rounded-lg border border-green-300 bg-green-50 px-4 py-3 text-sm">
-          {successMessage}
-        </div>
-      ) : null}
+          {errorMessage ? (
+            <Alert className="border-red-200 bg-red-50 text-red-900">
+              <AlertTitle>Login failed</AlertTitle>
+              <AlertDescription>{errorMessage}</AlertDescription>
+            </Alert>
+          ) : null}
 
-      {errorMessage ? (
-        <div className="rounded-lg border border-red-300 bg-red-50 px-4 py-3 text-sm">
-          {errorMessage}
-        </div>
-      ) : null}
+          <div className="space-y-2">
+            <Label htmlFor="email">Email</Label>
+            <Input
+              id="email"
+              type="email"
+              aria-invalid={Boolean(emailError)}
+              placeholder="Enter your email"
+              value={email}
+              onChange={(e) => setEmail(e.target.value)}
+            />
+            {emailError ? <p className="text-sm text-red-600">{emailError}</p> : null}
+          </div>
 
-      <div>
-        <label className="mb-1 block text-sm font-medium">Email</label>
-        <input
-          type="email"
-          className="w-full rounded-lg border px-3 py-2"
-          placeholder="Enter your email"
-          value={email}
-          onChange={(e) => setEmail(e.target.value)}
-        />
-        {emailError ? (
-          <p className="mt-1 text-sm text-red-600">{emailError}</p>
-        ) : null}
-      </div>
+          <div className="space-y-2">
+            <Label htmlFor="password">Password</Label>
+            <Input
+              id="password"
+              type="password"
+              aria-invalid={Boolean(passwordError)}
+              placeholder="Enter your password"
+              value={password}
+              onChange={(e) => setPassword(e.target.value)}
+            />
+            {passwordError ? (
+              <p className="text-sm text-red-600">{passwordError}</p>
+            ) : null}
+          </div>
 
-      <div>
-        <label className="mb-1 block text-sm font-medium">Password</label>
-        <input
-          type="password"
-          className="w-full rounded-lg border px-3 py-2"
-          placeholder="Enter your password"
-          value={password}
-          onChange={(e) => setPassword(e.target.value)}
-        />
-        {passwordError ? (
-          <p className="mt-1 text-sm text-red-600">{passwordError}</p>
-        ) : null}
-      </div>
-
-      <button
-        type="submit"
-        disabled={loading}
-        className="rounded-lg bg-black px-4 py-2 text-white disabled:opacity-50"
-      >
-        {loading ? "Logging in..." : "Login"}
-      </button>
-    </form>
+          <Button type="submit" disabled={loading} className="w-full">
+            {loading ? "Logging in..." : "Login"}
+          </Button>
+        </form>
+      </CardContent>
+    </Card>
   );
 }
