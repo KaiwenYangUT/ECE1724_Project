@@ -8,13 +8,13 @@
     - Student Number:
     - Preferred Email:
 
-- Name:
-    - Student Number:
-    - Preferred Email:
+- Name: Rosalind (Yuanyu) Wang
+    - Student Number: 1006930519
+    - Preferred Email: rosalind.wang@mail.utoronto.ca
 
-- Name:
-    - Student Number:
-    - Preferred Email:
+- Name: Eric (Haobo) Wang
+    - Student Number: 1006669384
+    - Preferred Email: hbo.wang@mail.utoronto.ca
 
 - Name: Kaiwen Yang (Kevin)
     - Student Number: 1007648066
@@ -183,9 +183,9 @@ Most importantly, these features form one coherent user flow: organizers create 
 
 ### [name]
 
-### [name]
+### Rosalind (Yuanyu) Wang
 
-### [name]
+### Eric (Haobo) Wang
 
 ### Kaiwen Yang (Kevin)
 
