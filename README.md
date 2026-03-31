@@ -228,3 +228,4 @@ This project also gave us a deeper understanding on the core of cooperation. In 
 
 In general, this project allows us to gain practical experience in transforming a more real idea into an operable product. In addition to improving the ability of full-stack development, database operation, API design and service integration, we also learned how to control the scope of the project, coordinate the cooperation of members, and make design judgments according to the feasibility. Because of this, this experience is no longer just an assignment, but more like a complete software development cycle: from planning to final implementation. Each step shows that the success of a project depends not only on the number of functions, but also on a clear plan, continuous iteration, and problem handling.
 
+## Video Demo
