@@ -185,7 +185,21 @@ Most importantly, these features form one coherent user flow: organizers create 
 
 ### Rosalind (Yuanyu) Wang
 
+- Implemented several important frontend pages and flows, including the login page, main page, event and ticket page, and the My Ticket page.
+- Developed and refined event-related functionality, including the create-event form, event–ticket connection logic, and the delete-event feature.
+- Updated routing and schema-related files to support smoother integration across the application.
+- Improved usability and code quality through repeated bug fixes, UI refinements such as success-message placement and styling, and added comments for maintainability.
+- Also contributed to documentation by updating the README, writing the `Lessons Learned and Concluding Remarks` section.
+- Created the presentation PowerPoint and recorded the video demo.
+
 ### Eric (Haobo) Wang
+
+- Implemented several important event-management and staff-management features, including the event preview pages, ticket purchase route, and dashboard-related functionality.
+- Added the staff role and related routes so staff could be assigned to events and access the event management dashboard appropriately.
+- Adjusted the schema and access logic to support staff permissions and improve the overall role-based workflow of the system.
+- Contributed to event creation functionality by helping build and validate the create-event flow for organizers.
+- Also worked on project integration through merge handling, page access fixes, and updates to the registration flow, including making role selection mandatory.
+- Created the presentation PowerPoint and presented the project in class.
 
 ### Kaiwen Yang (Kevin)
 
