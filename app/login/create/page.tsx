@@ -6,7 +6,7 @@ export default function LoginPage() {
       <div className="mx-auto max-w-md">
         <div className="mb-6">
           <p className="text-sm font-medium uppercase tracking-[0.2em] text-sky-700">
-            Event Ticketing System
+            Ticketa
           </p>
         </div>
         <LoginForm />

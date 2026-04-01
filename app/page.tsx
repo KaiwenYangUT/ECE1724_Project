@@ -116,7 +116,7 @@ export default function HomePage() {
               ECE1724 Project
             </Badge>
             <CardTitle className="text-4xl tracking-tight text-slate-900 md:text-5xl">
-              Event Ticketing System
+              Ticketa
             </CardTitle>
             <CardDescription className="text-base leading-7 text-slate-600">
               Browse campus events, register accounts, purchase tickets, and manage
