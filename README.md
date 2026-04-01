@@ -4,9 +4,9 @@
 
 ## Team Information
 
-- Name:
-    - Student Number:
-    - Preferred Email:
+- Name:Tianqi Ju
+    - Student Number: 1012870467
+    - Preferred Email: tianqi.ju@mail.utoronto.ca
 
 - Name: Rosalind (Yuanyu) Wang
     - Student Number: 1006930519
@@ -139,7 +139,89 @@ Most importantly, these features form one coherent user flow: organizers create 
 
 ## User Guide
 
-[Provide clear instructions for using each main feature. Add screenshots where appropriate.]
+### 1. Registration and Login
+
+- Users can register by providing email, password, and selecting a role.
+- After registration, users can log in to access the platform.
+- Authentication is required for ticket purchase and dashboard access.
+
+![alt text](home_page.png)
+![alt text](login_page.png)
+![alt text](logged_in.png)
+
+---
+
+### 2. Browsing Events
+
+- All users can view available events on the main page.
+- Each event displays:
+  - Event details
+  - Available ticket tiers
+  - Remaining ticket quantity
+
+![alt text](events.png)
+
+---
+
+### 3. Creating an Event (Organizer Only)
+
+- Organizers can create events by:
+  - Entering event details
+  - Adding ticket tiers (price and quantity)
+  - Uploading a banner image (optional)
+
+![alt text](create_events.png)
+
+---
+
+### 4. Purchasing Tickets
+
+- Attendees can:
+  - Select a ticket tier
+  - Confirm purchase
+
+- After purchase:
+  - A QR ticket is generated
+  - A PDF ticket can be downloaded
+  - A confirmation email is sent (if configured)
+
+---
+
+### 5. Viewing Tickets
+
+- Users can access the "My Tickets" page
+- Each ticket includes:
+  - Event information
+  - Ticket tier details
+  - QR code
+  - Ticket status (valid / checked-in / expired)
+
+![alt text](my_tickets.png)
+
+---
+
+### 6. Event Dashboard (Organizer / Staff)
+
+- Organizers and staff can:
+  - Access event-specific dashboard
+  - Scan QR codes using browser camera
+  - Manually input ticket tokens
+  - View real-time statistics
+
+![alt text](scan_qr.png)
+![alt text](status.png)
+
+---
+
+### 7. Check-In Process
+
+- Scan QR code or input token
+- System validates:
+  - Ticket existence
+  - Event match
+  - Check-in status
+
+- Duplicate check-ins are prevented automatically
 
 ## Development Guide
 
