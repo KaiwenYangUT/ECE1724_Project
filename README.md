@@ -227,23 +227,123 @@ Most importantly, these features form one coherent user flow: organizers create 
 
 ### Environment Setup and Configuration
 
-[Document environment variables, prerequisites, and configuration steps.]
+To run the project locally, the following prerequisites are required:
+
+- Node.js (v18 or above)
+- npm or pnpm
+- PostgreSQL
+- DigitalOcean Spaces (or any S3-compatible storage)
+
+First, install dependencies:
+
+```bash
+npm install
+```
+
+Create a `.env` file in the root directory and configure the following variables:
+
+```env
+DATABASE_URL=postgresql://<user>@localhost:5432/<db_name>
+
+JWT_SECRET=<your_jwt_secret>
+
+RESEND_API_KEY=<your_resend_api_key>
+EMAIL_FROM=<your_email_sender>
+
+APP_BASE_URL=http://localhost:3000
+
+SPACES_BUCKET=<your_bucket_name>
+SPACES_REGION=<your_region>
+SPACES_ENDPOINT=<your_spaces_endpoint>
+
+SPACES_KEY=<your_spaces_access_key>
+SPACES_SECRET=<your_spaces_secret_key>
+
+SPACES_PUBLIC_BASE_URL=<your_public_url>
+```
+
+These variables are required for database connection, authentication, email service, and cloud storage integration.
+
 
 ### Database Initialization
 
-[Document database setup, migration, and initialization steps.]
+The project uses Prisma ORM with PostgreSQL.
+
+Run the following commands to initialize the database:
+
+```bash
+npx prisma migrate dev
+```
+This will:
+- create the required database tables
+- apply schema changes
+
+Generate Prisma client:
+
+```bash
+npx prisma generate
+```
+
+(Optional) Open Prisma Studio to inspect the database:
+```bash
+npx prisma studio
+```
 
 ### Cloud Storage Configuration
 
-[Document cloud storage setup and required credentials/configuration.]
+The system uses DigitalOcean Spaces for storing event banner images.
+
+Required configuration:
+- Access Key and Secret Key from DigitalOcean
+- A created bucket (e.g., event-images)
+- Endpoint (e.g., https://<region>.digitaloceanspaces.com)
+
+Uploaded images are:
+- validated on upload (file type and size)
+- stored in Spaces
+- saved as public URLs in the database
 
 ### Local Development and Testing
 
-[Document how to run the project locally and how to test it.]
+Start the development server:
+
+```bash
+npm run dev
+```
+Open the application in browser: ```http://localhost:3000```
+
+The system was tested through manual end-to-end workflows:
+- User registration and login
+- Event creation and browsing
+- Ticket purchase and issuance
+- QR code check-in validation
+
+Edge cases tested include:
+- duplicate ticket purchase prevention
+- invalid input validation
+- ticket capacity limits
+- repeated check-in rejection
+
+Database states and logs were also inspected to ensure correctness.
 
 ## Deployment Information
 
-[If applicable, provide the live URL and deployment platform details.]
+The system is designed to be deployable on modern cloud platforms such as DigitalOcean and Vercel.
+
+The application follows a unified Next.js full-stack architecture, where both frontend and backend are integrated into a single deployment unit. PostgreSQL is used as the persistent database, and DigitalOcean Spaces is used for storing event-related assets such as banner images.
+
+For deployment, the system requires:
+
+- A Node.js runtime environment
+- A PostgreSQL database instance
+- Configured environment variables for authentication, email service, and cloud storage
+- Access to DigitalOcean Spaces (or any S3-compatible storage)
+
+Due to time constraints, full production deployment was not completed. However, the system was thoroughly tested in a local environment configured to closely simulate production conditions.
+
+All core features, including authentication, event management, ticket purchase, QR code validation, and dashboard operations, were verified through end-to-end testing to ensure correctness and stability.
+
+The architecture and configuration are fully compatible with cloud deployment and can be extended to a production environment with minimal additional setup.
 
 ## AI Assistance & Verification (Summary)
 
