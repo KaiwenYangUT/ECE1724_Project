@@ -347,19 +347,41 @@ The architecture and configuration are fully compatible with cloud deployment an
 
 ## AI Assistance & Verification (Summary)
 
-[Provide a concise summary of how AI tools contributed to the project and how correctness was verified.]
+AI tools were used in a limited and supportive role during development. They primarily assisted with clarifying framework usage (e.g., Next.js and Prisma), debugging specific issues, and improving documentation clarity. All major architectural decisions, feature design, and system integration were independently developed by the team.
+
+---
 
 ### Where AI Meaningfully Contributed
 
-[Briefly describe where AI was used, such as architecture exploration, database queries, debugging, or documentation.]
+AI was occasionally used for:
+
+- understanding framework-specific behaviors (e.g., Next.js route handlers, Prisma queries)
+- debugging implementation issues and identifying potential causes of errors
+- suggesting improvements to input validation and edge-case handling
+- refining wording in documentation for clarity and consistency
+
+AI assistance was limited to guidance and suggestions, and did not directly determine system design or core implementation decisions.
+
+---
 
 ### Representative Mistake or Limitation in AI Output
 
-[Briefly describe one representative mistake or limitation. Reference `ai-session.md` for concrete examples.]
+In some cases, AI-generated suggestions did not fully align with the project requirements. For example, certain proposed solutions lacked necessary validation checks or made incorrect assumptions about data relationships and request flow. These outputs required manual correction before being integrated into the system.
+
+This highlights that AI outputs were not used blindly, but were critically evaluated and adapted to fit the actual system design.
+
+---
 
 ### How Correctness Was Verified
 
-[Briefly describe how outputs were verified, such as manual testing, logs, unit tests, or integration tests.]
+System correctness was verified through multiple approaches:
+
+- manual end-to-end testing of full user workflows (registration → event creation → ticket purchase → check-in)
+- validation of edge cases such as duplicate ticket purchases, invalid inputs, and ticket capacity limits
+- inspection of database state using Prisma tools
+- checking server logs to ensure correct request handling and error responses
+
+All core features were tested under conditions consistent with a production-like environment to ensure reliability and consistency.
 
 ## Individual Contributions
 
