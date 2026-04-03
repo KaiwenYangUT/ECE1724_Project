@@ -385,7 +385,13 @@ All core features were tested under conditions consistent with a production-like
 
 ## Individual Contributions
 
-### [name]
+### Tianqi Ju
+
+- Configured and integrated DigitalOcean services, including setting up object storage (DigitalOcean Spaces) for handling event banner images.
+- Implemented the image upload workflow, including file validation, upload handling, and storing image URLs in the database.
+- Assisted with database setup and configuration using PostgreSQL and Prisma.
+- Supported backend integration by connecting storage, database, and API routes to ensure correct data flow.
+- Participated in debugging and testing to ensure system stability and correct functionality across different features.
 
 ### Rosalind (Yuanyu) Wang
 
