@@ -1,6 +1,5 @@
-# Final Report
+# Team 21 Final Report
 
-> Template only. Fill in each section before submission.
 
 ## Team Information
 
