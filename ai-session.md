@@ -4,7 +4,7 @@
 
 ### Prompt (you sent to AI)
 
-<copy/paste>
+
 
 We are implementing a ticket purchase system.
 How can we prevent a user from purchasing the same ticket tier multiple times, while also ensuring that ticket capacity is not exceeded?
@@ -35,7 +35,7 @@ The AI suggested:
 
 ### Prompt (you sent to AI)
 
-<copy/paste>
+
 
 We are implementing ticket purchase and check-in logic.
 How can we ensure that:
@@ -67,7 +67,7 @@ The AI suggested:
 
 ### Prompt (you sent to AI)
 
-<copy/paste>
+
 
 We are validating user input for event creation (title, date, ticket tiers).
 What is a good way to handle validation and provide clear error messages?
